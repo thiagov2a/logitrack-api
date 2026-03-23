@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-import uvicorn
 from routers import envios
 
 app = FastAPI(
