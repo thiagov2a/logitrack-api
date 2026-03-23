@@ -52,3 +52,15 @@ async def Visualizacion_de_detalle_completo_de_envio(tracking_id: str):
         sender=Party(name=result["sender"]["name"], address=result["sender"]["address"]),
         recipient=Party(name=result["recipient"]["name"], address=result["recipient"]["address"]),
     )
+    )
+from pydantic import BaseModel, Field
+from datetime import datetime
+from typing import Optional
+from models.enums import EstadoEnvio
+
+class EventoTracking(BaseModel):
+    fecha: datetime = Field(default_factory=datetime.now)
+    ubicacion: str = Field(..., description="Ubicación donde ocurre el evento")
+    observaciones: Optional[str] = None
+    estado_actual: EstadoEnvio
+    trackingId: Optional[str] = None # Opcional para que el usuario no tenga que mandarlo

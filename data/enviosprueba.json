@@ -1,0 +1,37 @@
+[
+  {
+    "id": "ENV-001",
+    "origen": "Buenos Aires",
+    "destino": "Córdoba",
+    "peso_kg": 2.5,
+    "estado": "En preparación"
+  },
+  {
+    "id": "ENV-002",
+    "origen": "Rosario",
+    "destino": "Mendoza",
+    "peso_kg": 15.0,
+    "estado": "En tránsito"
+  },
+  {
+    "id": "ENV-003",
+    "origen": "Tucumán",
+    "destino": "Salta",
+    "peso_kg": 0.5,
+    "estado": "Entregado"
+  },
+  {
+    "id": "ENV-004",
+    "origen": "Mar del Plata",
+    "destino": "Neuquén",
+    "peso_kg": 8.2,
+    "estado": "En tránsito"
+  },
+  {
+    "id": "ENV-005",
+    "origen": "La Plata",
+    "destino": "San Miguel",
+    "peso_kg": 3.1,
+    "estado": "Demorado"
+  }
+]
