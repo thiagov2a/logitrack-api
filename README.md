@@ -1,4 +1,4 @@
-# LogiTrack - API (Grupo 10)
+# LogiTrack (SFGLD) - Grupo 10
 
 **Universidad Nacional de General Sarmiento (UNGS)**
 **Materia:** Proyecto Profesional I / Laboratorio de Construcción de Software
@@ -26,3 +26,9 @@ El proyecto sigue una arquitectura separada por responsabilidades para evitar im
 ├── models/         # Entidades de dominio (Envio, Cliente, Tracking, Enums)
 ├── routers/        # Controladores y endpoints de la API
 └── main.py         # Punto de entrada de la aplicación
+```
+
+## Equipo de Desarrollo
+* Mauricio Santiago **Quevedo - 46.340.138**
+* Pablo Ariel **Rodriguez - 39.109.268**
+* Thiago Joel **Vildosa - 45.815.384**
