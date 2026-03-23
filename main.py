@@ -1,26 +1,15 @@
-#from fastapi import FastAPI
-
-#app = FastAPI(
-#    title="LogiTrack API",
- #   description="Mock API para el MVP de Logística",
-  #  version="1.0.0"
-#)
-
-#@app.get("/")
-#def estado_del_servidor():
- #   return {"mensaje": "¡El servidor de LogiTrack está vivo y funcionando!", "estado": "OK"}
- 
 from fastapi import FastAPI
-from models.tracking import router as tracking_router
+from routers import envios
 
 app = FastAPI(
     title="LogiTrack API",
-    description="Mock API para el MVP de Logística",
+    description="Mock API para el TP (Sprint 1)",
     version="1.0.0"
 )
 
-app.include_router(tracking_router)
+# Conectamos las rutas de envíos
+app.include_router(envios.router)
 
-@app.get("/")
-def estado_del_servidor():
-    return {"mensaje": "¡El servidor de LogiTrack está vivo y funcionando!", "estado": "OK"}
+# --- MAGIA PARA QUE FUNCIONE EL BOTÓN PLAY ---
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
