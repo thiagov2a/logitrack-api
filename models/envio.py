@@ -4,6 +4,7 @@ from typing import Optional, List
 from models.cliente import Cliente
 from models.tracking import EventoTracking
 
+
 class Envio(BaseModel):
     trackingId: Optional[str] = None
     origen: str = Field(..., description="Origen obligatorio")
@@ -12,9 +13,11 @@ class Envio(BaseModel):
     consentimiento: bool = True
     prioridadManual: bool = False
     activo: bool = True
-    
+
     # Cliente (Relación 1 a 1)
     remitente: Cliente
-    
+
     # Lista de Eventos (Relación 1 a Muchos)
-    historial: List[EventoTracking] = Field(default_factory=list, description="Historial de estados del paquete")
+    historial: List[EventoTracking] = Field(
+        default_factory=list, description="Historial de estados del paquete"
+    )

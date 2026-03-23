@@ -1,6 +1,4 @@
-import json
-from pathlib import Path
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from models.envio import Envio
 from models.tracking import EventoTracking
 from models.enums import EstadoEnvio
@@ -11,16 +9,18 @@ router = APIRouter(prefix="/api/envios", tags=["Envíos"])
 # Base de datos simulada en memoria
 mock_db_envios = []
 
+
+# --- 1. ALTA DE ENVÍO (US-07) ---
 @router.post("/", status_code=201)
 def registrar_envio(nuevo_envio: Envio):
     """
     US07: Registro individual de envío con Tracking ID
     """
-    # 1. Criterio de Aceptación: Generar Tracking ID único
+    # 1. Autogenerar Tracking ID
     codigo_unico = uuid.uuid4().hex[:8].upper()
     nuevo_envio.trackingId = f"TRK-{codigo_unico}"
 
-    # 2. Criterio de Aceptación: Inicializar estado en "INICIADO"
+    # 2. Inicializar estado
     evento_inicial = EventoTracking(
         trackingId=nuevo_envio.trackingId,
         estado_actual=EstadoEnvio.INICIADO,
@@ -28,10 +28,10 @@ def registrar_envio(nuevo_envio: Envio):
         observaciones="Envío registrado en el sistema por el Operador.",
     )
 
-    # 3. Guardamos el evento adentro de la lista del envío
+    # 3. Guardar evento en el historial del envío
     nuevo_envio.historial.append(evento_inicial)
 
-    # 4. Guardamos el envío en la base de datos de mentira
+    # 4. Guardar en la base de datos de mentira
     mock_db_envios.append(nuevo_envio)
 
     return {
@@ -40,24 +40,65 @@ def registrar_envio(nuevo_envio: Envio):
         "envio": nuevo_envio,
     }
 
-# Calculamos la ruta exacta a enviosprueba.json basándonos en dónde está este archivo
-# __file__ es envios.py -> parent es routers -> parent es app -> luego entramos a data
-BASE_DIR = Path(__file__).resolve().parent.parent
-ARCHIVO_ENVIOS = BASE_DIR / "data" / "enviosprueba.json"
 
-@router.get("/envios/", response_model=list[Envio])
+# --- 2. LISTADO GENERAL (US-11) ---
+@router.get("/")
 def listar_envios():
     """
-    Retorna la lista de todos los envíos desde el archivo JSON de prueba.
+    US-11: Listado general de envíos.
+    Retorna todos los envíos que están en la memoria.
     """
-    if not ARCHIVO_ENVIOS.exists():
-        return {"mensaje":"El archivo no existe"}
-    try:
-        with open(ARCHIVO_ENVIOS, "r", encoding="utf-8") as f:
-            envios_lista = json.load(f)
-        return envios_lista
-    except json.JSONDecodeError:
-        return JSONResponse(
-            status_code=500, 
-            content={"mensaje":"Error interno del servidor: El archivo de datos de envíos está corrupto, vacio o no tiene un formato JSON válido."}
+    return mock_db_envios
+
+
+# --- 3. BÚSQUEDA BÁSICA (US-12) ---
+@router.get("/{tracking_id}")
+def buscar_resumen_envio(tracking_id: str):
+    """
+    US-12: Búsqueda de envío por Tracking ID.
+    Devuelve solo la información principal y el estado actual del paquete.
+    """
+    envio_encontrado = next(
+        (envio for envio in mock_db_envios if envio.trackingId == tracking_id), None
+    )
+
+    if not envio_encontrado:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No se encontró ningún envío con el código {tracking_id}",
         )
+
+    # Buscamos el estado actual mirando el último evento de la lista de historial
+    estado_actual = (
+        envio_encontrado.historial[-1].estado_actual
+        if envio_encontrado.historial
+        else "DESCONOCIDO"
+    )
+
+    return {
+        "trackingId": envio_encontrado.trackingId,
+        "origen": envio_encontrado.origen,
+        "destino": envio_encontrado.destino,
+        "estado_actual": estado_actual,
+    }
+
+
+# --- 4. DETALLE COMPLETO Y TRACKING (US-13) ---
+@router.get("/{tracking_id}/detalles")
+def buscar_detalle_envio(tracking_id: str):
+    """
+    US-13: Visualización de detalle completo de envío.
+    Devuelve absolutamente toda la información: remitente, fechas y el historial completo de eventos.
+    """
+    envio_encontrado = next(
+        (envio for envio in mock_db_envios if envio.trackingId == tracking_id), None
+    )
+
+    if not envio_encontrado:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No se encontró ningún envío con el código {tracking_id}",
+        )
+
+    # Devolvemos el objeto completo tal cual está en la base de datos simulada
+    return envio_encontrado
