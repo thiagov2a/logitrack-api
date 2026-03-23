@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 from models.envio import Envio
 
 # Instanciamos el router
@@ -16,12 +17,14 @@ def listar_envios():
     """
     Retorna la lista de todos los envíos desde el archivo JSON de prueba.
     """
-    # Verificamos si el archivo existe por seguridad
     if not ARCHIVO_ENVIOS.exists():
-        return []
-
-    # Abrimos y leemos el JSON
-    with open(ARCHIVO_ENVIOS, "r", encoding="utf-8") as f:
-        envios_lista = json.load(f)
-        
-    return envios_lista
+        return {"mensaje":"El archivo no existe"}
+    try:
+        with open(ARCHIVO_ENVIOS, "r", encoding="utf-8") as f:
+            envios_lista = json.load(f)
+        return envios_lista
+    except json.JSONDecodeError:
+        return JSONResponse(
+            status_code=500, 
+            content={"mensaje":"Error interno del servidor: El archivo de datos de envíos está corrupto, vacio o no tiene un formato JSON válido."}
+        )
