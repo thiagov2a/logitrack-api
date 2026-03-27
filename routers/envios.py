@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Body
+from typing import Optional
 from models.envio import Envio
 from models.enums import EstadoEnvio
 from models.tracking import EventoTracking
@@ -113,16 +114,15 @@ FLUJO_ESTADOS = [
     EstadoEnvio.ENTREGADO
 ]
 
-@router.patch("/{tracking_id}/estado")
-def cambiar_estado_envio(
+@router.patch("/{tracking_id}/avanzar_estado")
+def avanzar_estado_envio(
     tracking_id: str, 
-    nuevo_estado: EstadoEnvio = Body(..., embed=True, description="El nuevo estado del envío"),
     ubicacion: str = Body(..., embed=True, description="Ubicación donde ocurre el evento"),
-    observaciones: str = Body(None, embed=True, description="Observaciones opcionales")
+    observaciones: Optional[str] = Body(None, embed=True, description="Observaciones opcionales")
 ):
     """
-    US-16: El sistema debe respetar el flujo lógico.
-    Se agrega un nuevo evento al historial validando el estado anterior.
+    US-16: Avanza automáticamente el estado del envío al siguiente en el flujo lógico.
+    Si ya está ENTREGADO, no hace nada.
     """
     # 1. Buscar el envío
     envio_encontrado = next(
@@ -135,7 +135,7 @@ def cambiar_estado_envio(
             detail=f"No se encontró ningún envío con el código {tracking_id}",
         )
 
-    # 2. Obtener el estado actual (es el último evento en el historial)
+    # 2. Obtener el estado actual (último evento)
     if not envio_encontrado.historial:
         raise HTTPException(
             status_code=500,
@@ -143,21 +143,19 @@ def cambiar_estado_envio(
         )
     
     estado_actual = envio_encontrado.historial[-1].estado_actual
-
-    # 3. Validar el flujo lógico
     indice_actual = FLUJO_ESTADOS.index(estado_actual)
-    indice_nuevo = FLUJO_ESTADOS.index(nuevo_estado)
 
-    if indice_nuevo == indice_actual:
-        return {"mensaje": "El envío ya se encuentra en este estado.", "envio": envio_encontrado}
-
-    if indice_nuevo != indice_actual + 1:
+    # 3. Verificar si ya llegó al estado final (ENTREGADO)
+    if indice_actual == len(FLUJO_ESTADOS) - 1:
         raise HTTPException(
             status_code=400,
-            detail=f"Transición no permitida. No se puede pasar de '{estado_actual.value}' a '{nuevo_estado.value}'."
+            detail="Operación no permitida: El envío ya ha sido ENTREGADO y no puede avanzar más."
         )
 
-    # 4. Crear el nuevo registro para el historial
+    # 4. Determinar automáticamente el siguiente estado
+    nuevo_estado = FLUJO_ESTADOS[indice_actual + 1]
+
+    # 5. Crear el nuevo registro para el historial
     nuevo_evento = EventoTracking(
         estado_actual=nuevo_estado,
         ubicacion=ubicacion,
@@ -165,10 +163,10 @@ def cambiar_estado_envio(
         trackingId=tracking_id
     )
 
-    # 5. Agregar el nuevo evento a la lista del historial del envío
+    # 6. Agregar el nuevo evento
     envio_encontrado.historial.append(nuevo_evento)
 
     return {
-        "mensaje": "Estado actualizado y evento registrado exitosamente",
+        "mensaje": f"Estado avanzado exitosamente a '{nuevo_estado.value}'",
         "envio": envio_encontrado
     }
