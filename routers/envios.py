@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
 from models.envio import Envio
 from models.tracking import EventoTracking
 from models.enums import EstadoEnvio
@@ -102,3 +102,68 @@ def buscar_detalle_envio(tracking_id: str):
 
     # Devolvemos el objeto completo tal cual está en la base de datos simulada
     return envio_encontrado
+
+
+# --- 5. CAMBIO DE ESTADO INDIVIDUAL (US-16) ---
+# Definimos el flujo lógico estricto como una lista
+FLUJO_ESTADOS = [
+    EstadoEnvio.INICIADO,
+    EstadoEnvio.EN_SUCURSAL,
+    EstadoEnvio.EN_TRANSITO,
+    EstadoEnvio.ENTREGADO
+]
+
+@router.patch("/{tracking_id}/estado")
+def cambiar_estado_envio(
+    tracking_id: str, 
+    nuevo_estado: EstadoEnvio = Body(..., embed=True, description="El nuevo estado del envío")
+):
+    """
+    US-16: El sistema debe respetar el flujo lógico: Iniciado -> En sucursal -> En tránsito -> Entregado. 
+    No se puede saltar de Iniciado a Entregado directamente.
+    """
+    # 1. Buscar el envío
+    envio_encontrado = next(
+        (envio for envio in mock_db_envios if envio.trackingId == tracking_id), None
+    )
+
+    if not envio_encontrado:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No se encontró ningún envío con el código {tracking_id}",
+        )
+
+    # Convertimos el estado actual del envío al Enum por seguridad (por si estaba guardado como texto)
+    try:
+        estado_actual = EstadoEnvio(envio_encontrado.estado)
+    except ValueError:
+        raise HTTPException(
+            status_code=500,
+            detail=f"El envío tiene un estado corrupto o no válido en la base de datos: {envio_encontrado.estado}"
+        )
+
+    # 2. Ya no necesitamos validar si el nuevo_estado existe, FastAPI + Enum lo hacen solos (Error 422).
+
+    # 3. Validar el flujo lógico
+    indice_actual = FLUJO_ESTADOS.index(estado_actual)
+    indice_nuevo = FLUJO_ESTADOS.index(nuevo_estado)
+
+    # Verificamos si intenta actualizar al mismo estado en el que ya está
+    if indice_nuevo == indice_actual:
+        return {"mensaje": "El envío ya se encuentra en este estado.", "envio": envio_encontrado}
+
+    # Verificamos que el nuevo estado sea exactamente el siguiente
+    if indice_nuevo != indice_actual + 1:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Transición no permitida. No se puede pasar de '{estado_actual.value}' a '{nuevo_estado.value}'."
+        )
+
+    # 4. Aplicar el cambio (guardamos el valor en texto o el Enum, dependiendo de tu modelo DB)
+    envio_encontrado.estado = nuevo_estado.value # Usamos .value para guardar "EN_TRANSITO" en lugar del objeto Enum
+
+    # 5. Retornar
+    return {
+        "mensaje": "Estado actualizado exitosamente",
+        "envio": envio_encontrado
+    }
