@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Body
 from models.envio import Envio
-from models.tracking import EventoTracking
 from models.enums import EstadoEnvio
+from models.tracking import EventoTracking
 import uuid
 
 router = APIRouter(prefix="/api/envios", tags=["Envíos"])
@@ -116,11 +116,13 @@ FLUJO_ESTADOS = [
 @router.patch("/{tracking_id}/estado")
 def cambiar_estado_envio(
     tracking_id: str, 
-    nuevo_estado: EstadoEnvio = Body(..., embed=True, description="El nuevo estado del envío")
+    nuevo_estado: EstadoEnvio = Body(..., embed=True, description="El nuevo estado del envío"),
+    ubicacion: str = Body(..., embed=True, description="Ubicación donde ocurre el evento"),
+    observaciones: str = Body(None, embed=True, description="Observaciones opcionales")
 ):
     """
-    US-16: El sistema debe respetar el flujo lógico: Iniciado -> En sucursal -> En tránsito -> Entregado. 
-    No se puede saltar de Iniciado a Entregado directamente.
+    US-16: El sistema debe respetar el flujo lógico.
+    Se agrega un nuevo evento al historial validando el estado anterior.
     """
     # 1. Buscar el envío
     envio_encontrado = next(
@@ -133,37 +135,40 @@ def cambiar_estado_envio(
             detail=f"No se encontró ningún envío con el código {tracking_id}",
         )
 
-    # Convertimos el estado actual del envío al Enum por seguridad (por si estaba guardado como texto)
-    try:
-        estado_actual = EstadoEnvio(envio_encontrado.estado)
-    except ValueError:
+    # 2. Obtener el estado actual (es el último evento en el historial)
+    if not envio_encontrado.historial:
         raise HTTPException(
             status_code=500,
-            detail=f"El envío tiene un estado corrupto o no válido en la base de datos: {envio_encontrado.estado}"
+            detail="Error interno: El envío no tiene un historial inicial válido."
         )
-
-    # 2. Ya no necesitamos validar si el nuevo_estado existe, FastAPI + Enum lo hacen solos (Error 422).
+    
+    estado_actual = envio_encontrado.historial[-1].estado_actual
 
     # 3. Validar el flujo lógico
     indice_actual = FLUJO_ESTADOS.index(estado_actual)
     indice_nuevo = FLUJO_ESTADOS.index(nuevo_estado)
 
-    # Verificamos si intenta actualizar al mismo estado en el que ya está
     if indice_nuevo == indice_actual:
         return {"mensaje": "El envío ya se encuentra en este estado.", "envio": envio_encontrado}
 
-    # Verificamos que el nuevo estado sea exactamente el siguiente
     if indice_nuevo != indice_actual + 1:
         raise HTTPException(
             status_code=400,
             detail=f"Transición no permitida. No se puede pasar de '{estado_actual.value}' a '{nuevo_estado.value}'."
         )
 
-    # 4. Aplicar el cambio (guardamos el valor en texto o el Enum, dependiendo de tu modelo DB)
-    envio_encontrado.estado = nuevo_estado.value # Usamos .value para guardar "EN_TRANSITO" en lugar del objeto Enum
+    # 4. Crear el nuevo registro para el historial
+    nuevo_evento = EventoTracking(
+        estado_actual=nuevo_estado,
+        ubicacion=ubicacion,
+        observaciones=observaciones,
+        trackingId=tracking_id
+    )
 
-    # 5. Retornar
+    # 5. Agregar el nuevo evento a la lista del historial del envío
+    envio_encontrado.historial.append(nuevo_evento)
+
     return {
-        "mensaje": "Estado actualizado exitosamente",
+        "mensaje": "Estado actualizado y evento registrado exitosamente",
         "envio": envio_encontrado
     }
