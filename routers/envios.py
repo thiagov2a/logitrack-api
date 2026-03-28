@@ -105,7 +105,7 @@ def buscar_detalle_envio(tracking_id: str):
     return envio_encontrado
 
 
-# --- 5. CAMBIO DE ESTADO INDIVIDUAL (US-16) ---
+# --- 5. CAMBIO DE ESTADO INDIVIDUAL (US-16,18 y 20) ---
 # Definimos el flujo lógico estricto como una lista
 FLUJO_ESTADOS = [
     EstadoEnvio.INICIADO,
@@ -121,8 +121,8 @@ def avanzar_estado_envio(
     observaciones: Optional[str] = Body(None, embed=True, description="Observaciones opcionales")
 ):
     """
-    US-16: Avanza automáticamente el estado del envío al siguiente en el flujo lógico.
-    Si ya está ENTREGADO, no hace nada.
+    US-16,18 y 20: Avanza automáticamente el estado del envío al siguiente en el flujo lógico, guarda la fecha y usuarioque realizo el cambio y permite dejar observaciones
+    (Si ya está ENTREGADO, no hace nada)
     """
     # 1. Buscar el envío
     envio_encontrado = next(
