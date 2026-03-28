@@ -170,3 +170,23 @@ def avanzar_estado_envio(
         "mensaje": f"Estado avanzado exitosamente a '{nuevo_estado.value}'",
         "envio": envio_encontrado
     }
+
+# --- 6. DETALLE COMPLETO DEL HISTORIAL DE ESTADOS (US-19) ---
+@router.get("/{tracking_id}/historial_estado")
+def historial_envio(tracking_id: str):
+    """
+    US-19: Historial de estados en detalle
+    Devuelve absolutamente toda la información: remitente, fechas y el historial completo de eventos.
+    """
+    envio_encontrado = next(
+        (envio for envio in mock_db_envios if envio.trackingId == tracking_id), None
+    )
+
+    if not envio_encontrado:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No se encontró ningún envío con el código {tracking_id}",
+        )
+
+    # Devolvemos el objeto completo tal cual está en la base de datos simulada
+    return envio_encontrado.historial
