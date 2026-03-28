@@ -1,5 +1,5 @@
-from fastapi import APIRouter, HTTPException, Body
-from typing import Optional
+from fastapi import APIRouter, HTTPException, Body, Query
+from typing import Optional, List
 from pydantic import BaseModel
 from models.envio import Envio
 from models.enums import EstadoEnvio
@@ -73,14 +73,30 @@ def registrar_envio(nuevo_envio: Envio):
     }
 
 
-# --- 2. LISTADO GENERAL (US-11) ---
+# --- 2. LISTADO GENERAL Y FILTRADO POR ESTADO (US-11 y US-14) ---
 @router.get("/")
-def listar_envios():
+def listar_envios(estados: Optional[List[EstadoEnvio]] = Query(None)):
     """
     US-11: Listado general de envíos.
     Retorna todos los envíos que están en la memoria.
+
+    US-14: Filtrar envíos por estado actual.
+    Permite filtrar por uno o varios estados usando query params.
+    Ejemplo:
+    /api/envios/?estados=INICIADO
+    /api/envios/?estados=INICIADO&estados=EN_SUCURSAL
     """
-    return mock_db_envios
+    # Si no se envía ningún filtro, devolvemos todo
+    if not estados:
+        return mock_db_envios
+
+    # Filtramos por el estado actual del envío
+    envios_filtrados = [
+        envio for envio in mock_db_envios
+        if obtener_estado_actual(envio) in estados
+    ]
+
+    return envios_filtrados
 
 
 # --- 3. BÚSQUEDA BÁSICA (US-12) ---
