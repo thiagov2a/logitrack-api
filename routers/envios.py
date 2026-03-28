@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Body, Query
 from typing import Optional, List
+from datetime import date
 from pydantic import BaseModel
 from models.envio import Envio
 from models.enums import EstadoEnvio
@@ -73,28 +74,53 @@ def registrar_envio(nuevo_envio: Envio):
     }
 
 
-# --- 2. LISTADO GENERAL Y FILTRADO POR ESTADO (US-11 y US-14) ---
+# --- 2. LISTADO GENERAL, FILTRADO POR ESTADO Y RANGO DE FECHAS (US-11, US-14 y US-15) ---
 @router.get("/")
-def listar_envios(estados: Optional[List[EstadoEnvio]] = Query(None)):
+def listar_envios(
+    estados: Optional[List[EstadoEnvio]] = Query(None),
+    desde: Optional[date] = Query(None, description="Fecha desde en formato YYYY-MM-DD"),
+    hasta: Optional[date] = Query(None, description="Fecha hasta en formato YYYY-MM-DD")
+):
     """
     US-11: Listado general de envíos.
     Retorna todos los envíos que están en la memoria.
 
     US-14: Filtrar envíos por estado actual.
     Permite filtrar por uno o varios estados usando query params.
-    Ejemplo:
-    /api/envios/?estados=INICIADO
-    /api/envios/?estados=INICIADO&estados=EN_SUCURSAL
-    """
-    # Si no se envía ningún filtro, devolvemos todo
-    if not estados:
-        return mock_db_envios
 
-    # Filtramos por el estado actual del envío
-    envios_filtrados = [
-        envio for envio in mock_db_envios
-        if obtener_estado_actual(envio) in estados
-    ]
+    US-15: Filtrar envíos por rango de fechas.
+    Permite traer solo los envíos cuya fecha de creación esté entre 'desde' y 'hasta'.
+    """
+    # 1. Validar rango de fechas
+    if desde and hasta and desde > hasta:
+        raise HTTPException(
+            status_code=400,
+            detail="La fecha 'Desde' no puede ser mayor a la fecha 'Hasta'"
+        )
+
+    # 2. Empezamos con todos los envíos
+    envios_filtrados = mock_db_envios
+
+    # 3. Filtrar por estado actual si se envía el parámetro
+    if estados:
+        envios_filtrados = [
+            envio for envio in envios_filtrados
+            if obtener_estado_actual(envio) in estados
+        ]
+
+    # 4. Filtrar por fecha desde
+    if desde:
+        envios_filtrados = [
+            envio for envio in envios_filtrados
+            if envio.fechaCreacion.date() >= desde
+        ]
+
+    # 5. Filtrar por fecha hasta
+    if hasta:
+        envios_filtrados = [
+            envio for envio in envios_filtrados
+            if envio.fechaCreacion.date() <= hasta
+        ]
 
     return envios_filtrados
 
