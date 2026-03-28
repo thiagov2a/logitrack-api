@@ -6,6 +6,7 @@ class EstadoEnvio(str, Enum):
     EN_SUCURSAL = "EN_SUCURSAL"
     EN_TRANSITO = "EN_TRANSITO"
     ENTREGADO = "ENTREGADO"
+    CANCELADO = "CANCELADO"
 
 
 class PrioridadEnvio(str, Enum):

@@ -27,6 +27,11 @@ class EnvioUpdate(BaseModel):
     remitente: Optional[RemitenteUpdate] = None
 
 
+# Modelo para confirmar cancelación
+class ConfirmacionCancelacion(BaseModel):
+    confirmar: bool
+
+
 def obtener_estado_actual(envio: Envio):
     """
     Devuelve el estado actual del envío tomando el último evento del historial.
@@ -186,7 +191,59 @@ def editar_envio(tracking_id: str, datos_actualizados: EnvioUpdate):
     }
 
 
-# --- 6. CAMBIO DE ESTADO INDIVIDUAL (US-16,18 y 20) ---
+# --- 6. CANCELAR ENVÍO INGRESADO (US-10) ---
+@router.patch("/{tracking_id}/cancelar")
+def cancelar_envio(tracking_id: str, confirmacion: ConfirmacionCancelacion):
+    """
+    US-10: Permite cancelar un envío solo si está en estado INICIADO.
+    Cambia el estado a CANCELADO y lo saca del flujo logístico activo.
+    """
+    # 1. Buscar el envío
+    envio_encontrado = next(
+        (envio for envio in mock_db_envios if envio.trackingId == tracking_id), None
+    )
+
+    if not envio_encontrado:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No se encontró ningún envío con el código {tracking_id}",
+        )
+
+    # 2. Verificar confirmación
+    if not confirmacion.confirmar:
+        raise HTTPException(
+            status_code=400,
+            detail="La cancelación debe ser confirmada explícitamente.",
+        )
+
+    # 3. Obtener el estado actual
+    estado_actual = obtener_estado_actual(envio_encontrado)
+
+    # 4. Validar que solo se pueda cancelar si está INICIADO
+    if estado_actual != EstadoEnvio.INICIADO:
+        raise HTTPException(
+            status_code=400,
+            detail="Solo se puede cancelar un envío en estado INICIADO",
+        )
+
+    # 5. Crear el nuevo registro para el historial
+    evento_cancelacion = EventoTracking(
+        trackingId=tracking_id,
+        estado_actual=EstadoEnvio.CANCELADO,
+        ubicacion=envio_encontrado.origen,
+        observaciones="Envío cancelado por el Operador.",
+    )
+
+    # 6. Agregar el nuevo evento
+    envio_encontrado.historial.append(evento_cancelacion)
+
+    return {
+        "mensaje": "Envío cancelado con éxito",
+        "envio": envio_encontrado,
+    }
+
+
+# --- 7. CAMBIO DE ESTADO INDIVIDUAL (US-16,18 y 20) ---
 # Definimos el flujo lógico estricto como una lista
 FLUJO_ESTADOS = [
     EstadoEnvio.INICIADO,
@@ -197,7 +254,7 @@ FLUJO_ESTADOS = [
 
 @router.patch("/{tracking_id}/avanzar_estado")
 def avanzar_estado_envio(
-    tracking_id: str, 
+    tracking_id: str,
     ubicacion: str = Body(..., embed=True, description="Ubicación donde ocurre el evento"),
     observaciones: Optional[str] = Body(None, embed=True, description="Observaciones opcionales")
 ):
@@ -222,21 +279,29 @@ def avanzar_estado_envio(
             status_code=500,
             detail="Error interno: El envío no tiene un historial inicial válido."
         )
-    
+
     estado_actual = envio_encontrado.historial[-1].estado_actual
+
+    # 3. Verificar si el envío fue cancelado
+    if estado_actual == EstadoEnvio.CANCELADO:
+        raise HTTPException(
+            status_code=400,
+            detail="Operación no permitida: El envío está CANCELADO y no puede avanzar en el flujo logístico."
+        )
+
     indice_actual = FLUJO_ESTADOS.index(estado_actual)
 
-    # 3. Verificar si ya llegó al estado final (ENTREGADO)
+    # 4. Verificar si ya llegó al estado final (ENTREGADO)
     if indice_actual == len(FLUJO_ESTADOS) - 1:
         raise HTTPException(
             status_code=400,
             detail="Operación no permitida: El envío ya ha sido ENTREGADO y no puede avanzar más."
         )
 
-    # 4. Determinar automáticamente el siguiente estado
+    # 5. Determinar automáticamente el siguiente estado
     nuevo_estado = FLUJO_ESTADOS[indice_actual + 1]
 
-    # 5. Crear el nuevo registro para el historial
+    # 6. Crear el nuevo registro para el historial
     nuevo_evento = EventoTracking(
         estado_actual=nuevo_estado,
         ubicacion=ubicacion,
@@ -244,7 +309,7 @@ def avanzar_estado_envio(
         trackingId=tracking_id
     )
 
-    # 6. Agregar el nuevo evento
+    # 7. Agregar el nuevo evento
     envio_encontrado.historial.append(nuevo_evento)
 
     return {
