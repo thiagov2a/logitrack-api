@@ -1,192 +1,139 @@
 from fastapi import APIRouter, HTTPException, Body
+from pydantic import BaseModel
 from typing import Optional
 from models.envio import Envio
-from models.enums import EstadoEnvio
+from models.cliente import Cliente
 from models.tracking import EventoTracking
+from models.enums import EstadoEnvio
 import uuid
 
-router = APIRouter(prefix="/api/envios", tags=["Envíos"])
-
-# Base de datos simulada en memoria
-mock_db_envios = []
+router = APIRouter(prefix="/api/envios", tags=["Envios"])
 
 
-# --- 1. ALTA DE ENVÍO (US-07) ---
+class CambioEstadoRequest(BaseModel):
+    nuevo_estado: EstadoEnvio
+    ubicacion: str
+    observaciones: Optional[str] = None
+
+
+# --- Datos semilla ---
+def _crear_envio_semilla(origen, destino, dni, nombre, estado) -> Envio:
+    envio = Envio(
+        trackingId=f"TRK-{uuid.uuid4().hex[:8].upper()}",
+        origen=origen,
+        destino=destino,
+        remitente=Cliente(dni=dni, nombre=nombre),
+    )
+    envio.historial.append(
+        EventoTracking(trackingId=envio.trackingId, estado_actual=EstadoEnvio.INICIADO, ubicacion=origen)
+    )
+    if estado != EstadoEnvio.INICIADO:
+        envio.historial.append(
+            EventoTracking(trackingId=envio.trackingId, estado_actual=estado, ubicacion=destino)
+        )
+    return envio
+
+
+mock_db_envios = [
+    _crear_envio_semilla("Buenos Aires", "Cordoba", "12345678", "Ana Gomez", EstadoEnvio.EN_TRANSITO),
+    _crear_envio_semilla("Rosario", "Mendoza", "87654321", "Luis Perez", EstadoEnvio.EN_SUCURSAL),
+    _crear_envio_semilla("La Plata", "Tucuman", "11223344", "Maria Lopez", EstadoEnvio.INICIADO),
+]
+
+FLUJO_ESTADOS = [
+    EstadoEnvio.INICIADO,
+    EstadoEnvio.EN_SUCURSAL,
+    EstadoEnvio.EN_TRANSITO,
+    EstadoEnvio.ENTREGADO,
+]
+
+
+# --- 1. ALTA DE ENVIO (US-07) ---
 @router.post("/", status_code=201)
 def registrar_envio(nuevo_envio: Envio):
-    """
-    US07: Registro individual de envío con Tracking ID
-    """
-    # 1. Autogenerar Tracking ID
-    codigo_unico = uuid.uuid4().hex[:8].upper()
-    nuevo_envio.trackingId = f"TRK-{codigo_unico}"
-
-    # 2. Inicializar estado
-    evento_inicial = EventoTracking(
+    """US-07: Registro individual de envio con Tracking ID"""
+    nuevo_envio.trackingId = f"TRK-{uuid.uuid4().hex[:8].upper()}"
+    nuevo_envio.historial.append(EventoTracking(
         trackingId=nuevo_envio.trackingId,
         estado_actual=EstadoEnvio.INICIADO,
         ubicacion=nuevo_envio.origen,
-        observaciones="Envío registrado en el sistema por el Operador.",
-    )
-
-    # 3. Guardar evento en el historial del envío
-    nuevo_envio.historial.append(evento_inicial)
-
-    # 4. Guardar en la base de datos de mentira
+        observaciones="Envio registrado en el sistema por el Operador.",
+    ))
     mock_db_envios.append(nuevo_envio)
-
-    return {
-        "mensaje": "Envío registrado con éxito",
-        "trackingId": nuevo_envio.trackingId,
-        "envio": nuevo_envio,
-    }
+    return {"mensaje": "Envio registrado con exito", "trackingId": nuevo_envio.trackingId, "envio": nuevo_envio}
 
 
 # --- 2. LISTADO GENERAL (US-11) ---
 @router.get("/")
 def listar_envios():
-    """
-    US-11: Listado general de envíos.
-    Retorna todos los envíos que están en la memoria.
-    """
+    """US-11: Listado general de envios."""
     return mock_db_envios
 
 
-# --- 3. BÚSQUEDA BÁSICA (US-12) ---
+# --- 3. BUSQUEDA BASICA (US-12) ---
 @router.get("/{tracking_id}")
 def buscar_resumen_envio(tracking_id: str):
-    """
-    US-12: Búsqueda de envío por Tracking ID.
-    Devuelve solo la información principal y el estado actual del paquete.
-    """
-    envio_encontrado = next(
-        (envio for envio in mock_db_envios if envio.trackingId == tracking_id), None
-    )
-
-    if not envio_encontrado:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No se encontró ningún envío con el código {tracking_id}",
-        )
-
-    # Buscamos el estado actual mirando el último evento de la lista de historial
-    estado_actual = (
-        envio_encontrado.historial[-1].estado_actual
-        if envio_encontrado.historial
-        else "DESCONOCIDO"
-    )
-
-    return {
-        "trackingId": envio_encontrado.trackingId,
-        "origen": envio_encontrado.origen,
-        "destino": envio_encontrado.destino,
-        "estado_actual": estado_actual,
-    }
+    """US-12: Busqueda de envio por Tracking ID."""
+    envio = next((e for e in mock_db_envios if e.trackingId == tracking_id), None)
+    if not envio:
+        raise HTTPException(status_code=404, detail=f"No se encontro ningun envio con el codigo {tracking_id}")
+    estado_actual = envio.historial[-1].estado_actual if envio.historial else "DESCONOCIDO"
+    return {"trackingId": envio.trackingId, "origen": envio.origen, "destino": envio.destino, "estado_actual": estado_actual}
 
 
-# --- 4. DETALLE COMPLETO Y TRACKING (US-13) ---
+# --- 4. DETALLE COMPLETO (US-13) ---
 @router.get("/{tracking_id}/detalles")
 def buscar_detalle_envio(tracking_id: str):
-    """
-    US-13: Visualización de detalle completo de envío.
-    Devuelve absolutamente toda la información: remitente, fechas y el historial completo de eventos.
-    """
-    envio_encontrado = next(
-        (envio for envio in mock_db_envios if envio.trackingId == tracking_id), None
-    )
-
-    if not envio_encontrado:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No se encontró ningún envío con el código {tracking_id}",
-        )
-
-    # Devolvemos el objeto completo tal cual está en la base de datos simulada
-    return envio_encontrado
+    """US-13: Visualizacion de detalle completo de envio."""
+    envio = next((e for e in mock_db_envios if e.trackingId == tracking_id), None)
+    if not envio:
+        raise HTTPException(status_code=404, detail=f"No se encontro ningun envio con el codigo {tracking_id}")
+    return envio
 
 
-# --- 5. CAMBIO DE ESTADO INDIVIDUAL (US-16,18 y 20) ---
-# Definimos el flujo lógico estricto como una lista
-FLUJO_ESTADOS = [
-    EstadoEnvio.INICIADO,
-    EstadoEnvio.EN_SUCURSAL,
-    EstadoEnvio.EN_TRANSITO,
-    EstadoEnvio.ENTREGADO
-]
+# --- 5. CAMBIO DE ESTADO (US-08) ---
+@router.patch("/{tracking_id}/estado")
+def cambiar_estado_envio(tracking_id: str, body: CambioEstadoRequest):
+    """US-08: Cambio de estado de un envio existente."""
+    envio = next((e for e in mock_db_envios if e.trackingId == tracking_id), None)
+    if not envio:
+        raise HTTPException(status_code=404, detail=f"No se encontro ningun envio con el codigo {tracking_id}")
+    envio.historial.append(EventoTracking(
+        trackingId=tracking_id,
+        estado_actual=body.nuevo_estado,
+        ubicacion=body.ubicacion,
+        observaciones=body.observaciones,
+    ))
+    return {"mensaje": "Estado actualizado con exito", "trackingId": tracking_id, "nuevo_estado": body.nuevo_estado}
 
+
+# --- 6. AVANZAR ESTADO (US-16, 18, 20) ---
 @router.patch("/{tracking_id}/avanzar_estado")
 def avanzar_estado_envio(
-    tracking_id: str, 
-    ubicacion: str = Body(..., embed=True, description="Ubicación donde ocurre el evento"),
-    observaciones: Optional[str] = Body(None, embed=True, description="Observaciones opcionales")
+    tracking_id: str,
+    ubicacion: str = Body(..., embed=True),
+    observaciones: Optional[str] = Body(None, embed=True),
 ):
-    """
-    US-16,18 y 20: Avanza automáticamente el estado del envío al siguiente en el flujo lógico, guarda la fecha y usuarioque realizo el cambio y permite dejar observaciones
-    (Si ya está ENTREGADO, no hace nada)
-    """
-    # 1. Buscar el envío
-    envio_encontrado = next(
-        (envio for envio in mock_db_envios if envio.trackingId == tracking_id), None
-    )
-
-    if not envio_encontrado:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No se encontró ningún envío con el código {tracking_id}",
-        )
-
-    # 2. Obtener el estado actual (último evento)
-    if not envio_encontrado.historial:
-        raise HTTPException(
-            status_code=500,
-            detail="Error interno: El envío no tiene un historial inicial válido."
-        )
-    
-    estado_actual = envio_encontrado.historial[-1].estado_actual
+    """US-16/18/20: Avanza automaticamente al siguiente estado en el flujo logico."""
+    envio = next((e for e in mock_db_envios if e.trackingId == tracking_id), None)
+    if not envio:
+        raise HTTPException(status_code=404, detail=f"No se encontro ningun envio con el codigo {tracking_id}")
+    if not envio.historial:
+        raise HTTPException(status_code=500, detail="Error interno: el envio no tiene historial inicial.")
+    estado_actual = envio.historial[-1].estado_actual
     indice_actual = FLUJO_ESTADOS.index(estado_actual)
-
-    # 3. Verificar si ya llegó al estado final (ENTREGADO)
     if indice_actual == len(FLUJO_ESTADOS) - 1:
-        raise HTTPException(
-            status_code=400,
-            detail="Operación no permitida: El envío ya ha sido ENTREGADO y no puede avanzar más."
-        )
-
-    # 4. Determinar automáticamente el siguiente estado
+        raise HTTPException(status_code=400, detail="El envio ya fue ENTREGADO y no puede avanzar mas.")
     nuevo_estado = FLUJO_ESTADOS[indice_actual + 1]
+    envio.historial.append(EventoTracking(trackingId=tracking_id, estado_actual=nuevo_estado, ubicacion=ubicacion, observaciones=observaciones))
+    return {"mensaje": f"Estado avanzado a '{nuevo_estado.value}'", "envio": envio}
 
-    # 5. Crear el nuevo registro para el historial
-    nuevo_evento = EventoTracking(
-        estado_actual=nuevo_estado,
-        ubicacion=ubicacion,
-        observaciones=observaciones,
-        trackingId=tracking_id
-    )
 
-    # 6. Agregar el nuevo evento
-    envio_encontrado.historial.append(nuevo_evento)
-
-    return {
-        "mensaje": f"Estado avanzado exitosamente a '{nuevo_estado.value}'",
-        "envio": envio_encontrado
-    }
-
-# --- 6. DETALLE COMPLETO DEL HISTORIAL DE ESTADOS (US-19) ---
+# --- 7. HISTORIAL DE ESTADOS (US-19) ---
 @router.get("/{tracking_id}/historial_estado")
 def historial_envio(tracking_id: str):
-    """
-    US-19: Historial de estados en detalle
-    Devuelve absolutamente toda la información: remitente, fechas y el historial completo de eventos.
-    """
-    envio_encontrado = next(
-        (envio for envio in mock_db_envios if envio.trackingId == tracking_id), None
-    )
-
-    if not envio_encontrado:
-        raise HTTPException(
-            status_code=404,
-            detail=f"No se encontró ningún envío con el código {tracking_id}",
-        )
-
-    # Devolvemos el objeto completo tal cual está en la base de datos simulada
-    return envio_encontrado.historial
+    """US-19: Historial de estados en detalle."""
+    envio = next((e for e in mock_db_envios if e.trackingId == tracking_id), None)
+    if not envio:
+        raise HTTPException(status_code=404, detail=f"No se encontro ningun envio con el codigo {tracking_id}")
+    return envio.historial
