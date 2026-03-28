@@ -9,8 +9,13 @@ from models.enums import EstadoEnvio
 
 
 def _seed():
-    e = Envio(trackingId="TRK-TEST01", origen="Buenos Aires", destino="Cordoba", remitente=Cliente(dni="12345678", nombre="Ana"))
-    e.historial.append(EventoTracking(trackingId="TRK-TEST01", estado_actual=EstadoEnvio.INICIADO, ubicacion="Buenos Aires"))
+    e = Envio(
+        trackingId="TRK-TEST01", origen="Buenos Aires", destino="Cordoba",
+        remitente=Cliente(dni="12345678", nombre="Ana"),
+    )
+    e.historial.append(
+        EventoTracking(trackingId="TRK-TEST01", estado_actual=EstadoEnvio.INICIADO, ubicacion="Buenos Aires")
+    )
     return e
 
 
