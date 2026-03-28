@@ -78,7 +78,10 @@ def buscar_resumen_envio(tracking_id: str):
     if not envio:
         raise HTTPException(status_code=404, detail=f"No se encontro ningun envio con el codigo {tracking_id}")
     estado_actual = envio.historial[-1].estado_actual if envio.historial else "DESCONOCIDO"
-    return {"trackingId": envio.trackingId, "origen": envio.origen, "destino": envio.destino, "estado_actual": estado_actual}
+    return {
+        "trackingId": envio.trackingId, "origen": envio.origen,
+        "destino": envio.destino, "estado_actual": estado_actual,
+    }
 
 
 # --- 4. DETALLE COMPLETO (US-13) ---
@@ -104,7 +107,8 @@ def cambiar_estado_envio(tracking_id: str, body: CambioEstadoRequest):
         ubicacion=body.ubicacion,
         observaciones=body.observaciones,
     ))
-    return {"mensaje": "Estado actualizado con exito", "trackingId": tracking_id, "nuevo_estado": body.nuevo_estado}
+    return {"mensaje": "Estado actualizado con exito", "trackingId": tracking_id,
+            "nuevo_estado": body.nuevo_estado}
 
 
 # --- 6. AVANZAR ESTADO (US-16, 18, 20) ---
@@ -125,7 +129,10 @@ def avanzar_estado_envio(
     if indice_actual == len(FLUJO_ESTADOS) - 1:
         raise HTTPException(status_code=400, detail="El envio ya fue ENTREGADO y no puede avanzar mas.")
     nuevo_estado = FLUJO_ESTADOS[indice_actual + 1]
-    envio.historial.append(EventoTracking(trackingId=tracking_id, estado_actual=nuevo_estado, ubicacion=ubicacion, observaciones=observaciones))
+    envio.historial.append(EventoTracking(
+        trackingId=tracking_id, estado_actual=nuevo_estado,
+        ubicacion=ubicacion, observaciones=observaciones,
+    ))
     return {"mensaje": f"Estado avanzado a '{nuevo_estado.value}'", "envio": envio}
 
 
