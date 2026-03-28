@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Body
+from typing import Optional
 from models.envio import Envio
-from models.tracking import EventoTracking
 from models.enums import EstadoEnvio
+from models.tracking import EventoTracking
 import uuid
 
 router = APIRouter(prefix="/api/envios", tags=["Envíos"])
@@ -102,3 +103,70 @@ def buscar_detalle_envio(tracking_id: str):
 
     # Devolvemos el objeto completo tal cual está en la base de datos simulada
     return envio_encontrado
+
+
+# --- 5. CAMBIO DE ESTADO INDIVIDUAL (US-16,18 y 20) ---
+# Definimos el flujo lógico estricto como una lista
+FLUJO_ESTADOS = [
+    EstadoEnvio.INICIADO,
+    EstadoEnvio.EN_SUCURSAL,
+    EstadoEnvio.EN_TRANSITO,
+    EstadoEnvio.ENTREGADO
+]
+
+@router.patch("/{tracking_id}/avanzar_estado")
+def avanzar_estado_envio(
+    tracking_id: str, 
+    ubicacion: str = Body(..., embed=True, description="Ubicación donde ocurre el evento"),
+    observaciones: Optional[str] = Body(None, embed=True, description="Observaciones opcionales")
+):
+    """
+    US-16,18 y 20: Avanza automáticamente el estado del envío al siguiente en el flujo lógico, guarda la fecha y usuarioque realizo el cambio y permite dejar observaciones
+    (Si ya está ENTREGADO, no hace nada)
+    """
+    # 1. Buscar el envío
+    envio_encontrado = next(
+        (envio for envio in mock_db_envios if envio.trackingId == tracking_id), None
+    )
+
+    if not envio_encontrado:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No se encontró ningún envío con el código {tracking_id}",
+        )
+
+    # 2. Obtener el estado actual (último evento)
+    if not envio_encontrado.historial:
+        raise HTTPException(
+            status_code=500,
+            detail="Error interno: El envío no tiene un historial inicial válido."
+        )
+    
+    estado_actual = envio_encontrado.historial[-1].estado_actual
+    indice_actual = FLUJO_ESTADOS.index(estado_actual)
+
+    # 3. Verificar si ya llegó al estado final (ENTREGADO)
+    if indice_actual == len(FLUJO_ESTADOS) - 1:
+        raise HTTPException(
+            status_code=400,
+            detail="Operación no permitida: El envío ya ha sido ENTREGADO y no puede avanzar más."
+        )
+
+    # 4. Determinar automáticamente el siguiente estado
+    nuevo_estado = FLUJO_ESTADOS[indice_actual + 1]
+
+    # 5. Crear el nuevo registro para el historial
+    nuevo_evento = EventoTracking(
+        estado_actual=nuevo_estado,
+        ubicacion=ubicacion,
+        observaciones=observaciones,
+        trackingId=tracking_id
+    )
+
+    # 6. Agregar el nuevo evento
+    envio_encontrado.historial.append(nuevo_evento)
+
+    return {
+        "mensaje": f"Estado avanzado exitosamente a '{nuevo_estado.value}'",
+        "envio": envio_encontrado
+    }
