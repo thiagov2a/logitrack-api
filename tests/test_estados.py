@@ -1,6 +1,7 @@
 import pytest
 from datetime import datetime
-from fastapi.teststate import TestState
+from fastapi.testclient import TestClient
+
 from main import app
 from routers import envios as envios_module
 from models.envio import Envio
@@ -8,7 +9,37 @@ from models.cliente import Cliente
 from models.tracking import EventoTracking
 from models.enums import EstadoEnvio
 
+
+def _seed():
+    e = Envio(
+        trackingId="TRK-TEST01", origen="Buenos Aires", destino="Cordoba",
+        remitente=Cliente(dni="12345678", nombre="Ana"),
+    )
+    e.historial.append(
+        EventoTracking(
+            trackingId="TRK-TEST01",
+            estado_actual=EstadoEnvio.INICIADO,
+            ubicacion="Buenos Aires"
+        )
+    )
+    return e
+
+
+@pytest.fixture(autouse=True)
+def reset_db():
+    envios_module.mock_db_envios.clear()
+    envios_module.mock_db_envios.append(_seed())
+    yield
+    envios_module.mock_db_envios.clear()
+
+
+@pytest.fixture
+def client(reset_db):
+    return TestClient(app)
+
 # --- US-16: Cambio de estado de envio ---
+
+
 def test_us16_avanzar_flujo_logico(client):
     tracking_id = "TRK-TEST01"
 
@@ -40,6 +71,8 @@ def test_us16_avanzar_flujo_logico(client):
     assert "no puede avanzar más" in res_error.json()["detail"]
 
 # --- US-18: Registrar automáticamente la fecha y hora ---
+
+
 def test_us18_registrar_fecha_hora(client):
     tracking_id = "TRK-TEST01"
     payload = {"ubicacion": "Sucursal Centro"}
