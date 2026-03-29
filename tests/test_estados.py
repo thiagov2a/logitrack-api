@@ -44,21 +44,21 @@ def test_us16_avanzar_flujo_logico(client):
     tracking_id = "TRK-TEST01"
 
     # 1. Avanzamos a EN_SUCURSAL
-    res1 = client.patch(f"/{tracking_id}/avanzar_estado",
+    res1 = client.patch(f"/envios/{tracking_id}/avanzar_estado",
                         json={"ubicacion": "Sucursal Origen"})
     assert res1.status_code == 200
     assert res1.json()[
         "envio"]["historial"][-1]["estado_actual"] == "EN_SUCURSAL"
 
     # 2. Avanzamos a EN_TRANSITO
-    res2 = client.patch(f"/{tracking_id}/avanzar_estado",
+    res2 = client.patch(f"/envios/{tracking_id}/avanzar_estado",
                         json={"ubicacion": "Ruta 9"})
     assert res2.status_code == 200
     assert res2.json()[
         "envio"]["historial"][-1]["estado_actual"] == "EN_TRANSITO"
 
     # 3. Avanzamos a ENTREGADO
-    res3 = client.patch(f"/{tracking_id}/avanzar_estado",
+    res3 = client.patch(f"/envios/{tracking_id}/avanzar_estado",
                         json={"ubicacion": "Casa del cliente"})
     assert res3.status_code == 200
     assert res3.json()[
@@ -66,7 +66,7 @@ def test_us16_avanzar_flujo_logico(client):
 
     # 4. Verificamos que ya no se pueda avanzar más (Error 400 esperado)
     res_error = client.patch(
-        f"/{tracking_id}/avanzar_estado", json={"ubicacion": "Extra"})
+        f"/envios/{tracking_id}/avanzar_estado", json={"ubicacion": "Extra"})
     assert res_error.status_code == 400
     assert "no puede avanzar más" in res_error.json()["detail"]
 
@@ -79,7 +79,7 @@ def test_us18_registrar_fecha_hora(client):
 
     tiempo_antes = datetime.now()
 
-    response = client.patch(f"/{tracking_id}/avanzar_estado", json=payload)
+    response = client.patch(f"/envios/{tracking_id}/avanzar_estado", json=payload)
     assert response.status_code == 200
 
     data = response.json()
@@ -102,7 +102,7 @@ def test_us20_agregar_observacion_al_estado(client):
         "observaciones": "El paquete llegó con la etiqueta arrugada"
     }
 
-    response = client.patch(f"/{tracking_id}/avanzar_estado", json=payload)
+    response = client.patch(f"/envios/{tracking_id}/avanzar_estado", json=payload)
     assert response.status_code == 200
 
     data = response.json()

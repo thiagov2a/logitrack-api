@@ -7,7 +7,7 @@ app = FastAPI(
 )
 
 # Conectamos las rutas de envíos
-app.include_router(envios.router)
+app.include_router(envios.router, prefix="/envios", tags=["Envios"])
 
 
 if __name__ == "__main__":
