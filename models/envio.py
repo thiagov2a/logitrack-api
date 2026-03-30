@@ -14,10 +14,11 @@ class Envio(BaseModel):
     prioridadManual: bool = False
     activo: bool = True
 
-    # Cliente (Relación 1 a 1)
+    # Clientes (Relacion 1 a 1)
     remitente: Cliente
+    destinatario: Optional[Cliente] = None
 
-    # Lista de Eventos (Relación 1 a Muchos)
+    # Lista de Eventos (Relacion 1 a Muchos)
     historial: List[EventoTracking] = Field(
         default_factory=list, description="Historial de estados del paquete"
     )

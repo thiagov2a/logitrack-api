@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Body, Query
+from fastapi import APIRouter, HTTPException, Query, Header
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
@@ -117,10 +117,13 @@ def listar_envios(
     US-14: Filtrar por uno o varios estados. Ejemplo: ?estados=INICIADO&estados=EN_SUCURSAL
     US-15: Filtrar por rango de fecha de creacion. Ejemplo: ?fecha_desde=2024-01-01&fecha_hasta=2024-12-31
     """
-    resultado = mock_db_envios
+    resultado = list(mock_db_envios)
 
     if estados:
         resultado = [e for e in resultado if _estado_actual(e) in estados]
+
+    if fecha_desde and fecha_hasta and fecha_desde > fecha_hasta:
+        raise HTTPException(status_code=400, detail="fecha_desde no puede ser mayor a fecha_hasta.")
 
     if fecha_desde:
         resultado = [e for e in resultado if e.fechaCreacion >= fecha_desde]
@@ -128,7 +131,7 @@ def listar_envios(
     if fecha_hasta:
         resultado = [e for e in resultado if e.fechaCreacion <= fecha_hasta]
 
-    return resultado
+    return sorted(resultado, key=lambda e: e.fechaCreacion)
 
 
 # US-12: Buscar envio por Tracking ID
@@ -158,11 +161,15 @@ def historial_envio(tracking_id: str):
     return _buscar_envio(tracking_id).historial
 
 
-# US-08: Cambio de estado manual
+# US-08 / US-16 / US-18 / US-20: Cambio de estado (solo Supervisor)
 @router.patch("/{tracking_id}/estado")
-def cambiar_estado_envio(tracking_id: str, body: CambioEstadoRequest):
-    """US-08: Cambia el estado del envio a cualquier valor valido, registrando fecha/hora."""
+def cambiar_estado_envio(tracking_id: str, body: CambioEstadoRequest, x_rol: str = Header(...)):
+    """US-08/16/18/20: Cambia el estado del envio. Solo accesible para Supervisor."""
+    if x_rol.lower() != "supervisor":
+        raise HTTPException(status_code=403, detail="Acceso denegado: se requiere rol Supervisor.")
     envio = _buscar_envio(tracking_id)
+    if _estado_actual(envio) == EstadoEnvio.CANCELADO:
+        raise HTTPException(status_code=400, detail="El envio esta CANCELADO y no puede cambiar de estado.")
     envio.historial.append(EventoTracking(
         trackingId=tracking_id,
         estado_actual=body.nuevo_estado,
@@ -170,36 +177,6 @@ def cambiar_estado_envio(tracking_id: str, body: CambioEstadoRequest):
         observaciones=body.observaciones,
     ))
     return {"mensaje": "Estado actualizado con exito", "trackingId": tracking_id, "nuevo_estado": body.nuevo_estado}
-
-
-# US-16 / US-18 / US-20: Avanzar al siguiente estado del flujo
-@router.patch("/{tracking_id}/avanzar_estado")
-def avanzar_estado_envio(
-    tracking_id: str,
-    ubicacion: str = Body(..., embed=True),
-    observaciones: Optional[str] = Body(None, embed=True),
-):
-    """US-16/18/20: Avanza automaticamente al siguiente estado en el flujo logico."""
-    envio = _buscar_envio(tracking_id)
-    estado = _estado_actual(envio)
-
-    if estado == EstadoEnvio.CANCELADO:
-        raise HTTPException(status_code=400, detail="El envio esta CANCELADO y no puede avanzar.")
-
-    if estado not in FLUJO_ESTADOS:
-        raise HTTPException(status_code=400, detail="Estado actual no pertenece al flujo logico.")
-
-    if estado == FLUJO_ESTADOS[-1]:
-        raise HTTPException(status_code=400, detail="El envio ya fue ENTREGADO y no puede avanzar mas.")
-
-    nuevo_estado = FLUJO_ESTADOS[FLUJO_ESTADOS.index(estado) + 1]
-    envio.historial.append(EventoTracking(
-        trackingId=tracking_id,
-        estado_actual=nuevo_estado,
-        ubicacion=ubicacion,
-        observaciones=observaciones,
-    ))
-    return {"mensaje": f"Estado avanzado a '{nuevo_estado.value}'", "envio": envio}
 
 
 # US-09: Editar datos del envio en estado INICIADO
