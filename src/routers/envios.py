@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Query, Header
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
-from src.models.envio import Envio
+from src.models.envio import Envio, Dimensiones
 from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
 from src.models.enums import EstadoEnvio
@@ -53,7 +53,8 @@ def _estado_actual(envio: Envio) -> EstadoEnvio:
 
 
 def _buscar_envio(tracking_id: str) -> Envio:
-    envio = next((e for e in mock_db_envios if e.trackingId == tracking_id), None)
+    envio = next(
+        (e for e in mock_db_envios if e.trackingId == tracking_id), None)
     if not envio:
         raise HTTPException(
             status_code=404,
@@ -64,27 +65,52 @@ def _buscar_envio(tracking_id: str) -> Envio:
 
 # --- Datos semilla ---
 
-def _crear_semilla(origen, destino, dni, nombre, estado) -> Envio:
+def _crear_semilla(
+    origen: str,
+    destino: str,
+    dni: str,
+    nombre: str,
+    estado: EstadoEnvio,
+    peso: float = None,
+    largo: float = None,
+    ancho: float = None,
+    alto: float = None
+) -> Envio:
+
+    dims = None
+    if largo is not None and ancho is not None and alto is not None:
+        dims = Dimensiones(largo_cm=largo, ancho_cm=ancho, alto_cm=alto)
+
     envio = Envio(
         trackingId=f"TRK-{uuid.uuid4().hex[:8].upper()}",
         origen=origen,
         destino=destino,
+        peso_kg=peso,
+        dimensiones=dims,
         remitente=Cliente(dni=dni, nombre=nombre),
     )
+
     envio.historial.append(
-        EventoTracking(trackingId=envio.trackingId, estado_actual=EstadoEnvio.INICIADO, ubicacion=origen)
+        EventoTracking(trackingId=envio.trackingId,
+                       estado_actual=EstadoEnvio.INICIADO, ubicacion=origen)
     )
+
     if estado != EstadoEnvio.INICIADO:
         envio.historial.append(
-            EventoTracking(trackingId=envio.trackingId, estado_actual=estado, ubicacion=destino)
+            EventoTracking(trackingId=envio.trackingId,
+                           estado_actual=estado, ubicacion=destino)
         )
+
     return envio
 
 
 mock_db_envios = [
-    _crear_semilla("Buenos Aires", "Cordoba", "12345678", "Ana Gomez", EstadoEnvio.EN_TRANSITO),
-    _crear_semilla("Rosario", "Mendoza", "87654321", "Luis Perez", EstadoEnvio.EN_SUCURSAL),
-    _crear_semilla("La Plata", "Tucuman", "11223344", "Maria Lopez", EstadoEnvio.INICIADO),
+    _crear_semilla("Buenos Aires", "Cordoba", "12345678",
+                   "Ana Gomez", EstadoEnvio.EN_TRANSITO),
+    _crear_semilla("Rosario", "Mendoza", "87654321",
+                   "Luis Perez", EstadoEnvio.EN_SUCURSAL),
+    _crear_semilla("La Plata", "Tucuman", "11223344",
+                   "Maria Lopez", EstadoEnvio.INICIADO),
 ]
 
 
@@ -123,7 +149,8 @@ def listar_envios(
         resultado = [e for e in resultado if _estado_actual(e) in estados]
 
     if fecha_desde and fecha_hasta and fecha_desde > fecha_hasta:
-        raise HTTPException(status_code=400, detail="fecha_desde no puede ser mayor a fecha_hasta.")
+        raise HTTPException(
+            status_code=400, detail="fecha_desde no puede ser mayor a fecha_hasta.")
 
     if fecha_desde:
         resultado = [e for e in resultado if e.fechaCreacion >= fecha_desde]
@@ -131,7 +158,7 @@ def listar_envios(
     if fecha_hasta:
         resultado = [e for e in resultado if e.fechaCreacion <= fecha_hasta]
 
-    return sorted(resultado, key=lambda e: e.fechaCreacion)
+    return sorted(resultado, key=lambda e: e.fechaCreacion.replace(tzinfo=None))
 
 
 # US-12: Buscar envio por Tracking ID
@@ -166,10 +193,12 @@ def historial_envio(tracking_id: str):
 def cambiar_estado_envio(tracking_id: str, body: CambioEstadoRequest, x_rol: str = Header(...)):
     """US-08/16/18/20: Cambia el estado del envio. Solo accesible para Supervisor."""
     if x_rol.lower() != "supervisor":
-        raise HTTPException(status_code=403, detail="Acceso denegado: se requiere rol Supervisor.")
+        raise HTTPException(
+            status_code=403, detail="Acceso denegado: se requiere rol Supervisor.")
     envio = _buscar_envio(tracking_id)
     if _estado_actual(envio) == EstadoEnvio.CANCELADO:
-        raise HTTPException(status_code=400, detail="El envio esta CANCELADO y no puede cambiar de estado.")
+        raise HTTPException(
+            status_code=400, detail="El envio esta CANCELADO y no puede cambiar de estado.")
     envio.historial.append(EventoTracking(
         trackingId=tracking_id,
         estado_actual=body.nuevo_estado,
@@ -186,7 +215,8 @@ def editar_envio(tracking_id: str, datos: EnvioUpdate):
     envio = _buscar_envio(tracking_id)
 
     if _estado_actual(envio) != EstadoEnvio.INICIADO:
-        raise HTTPException(status_code=400, detail="Solo se puede editar un envio en estado INICIADO.")
+        raise HTTPException(
+            status_code=400, detail="Solo se puede editar un envio en estado INICIADO.")
 
     if datos.origen is not None:
         envio.origen = datos.origen
@@ -212,10 +242,12 @@ def cancelar_envio(tracking_id: str, confirmacion: ConfirmacionCancelacion):
     envio = _buscar_envio(tracking_id)
 
     if not confirmacion.confirmar:
-        raise HTTPException(status_code=400, detail="La cancelacion debe ser confirmada explicitamente.")
+        raise HTTPException(
+            status_code=400, detail="La cancelacion debe ser confirmada explicitamente.")
 
     if _estado_actual(envio) != EstadoEnvio.INICIADO:
-        raise HTTPException(status_code=400, detail="Solo se puede cancelar un envio en estado INICIADO.")
+        raise HTTPException(
+            status_code=400, detail="Solo se puede cancelar un envio en estado INICIADO.")
 
     envio.historial.append(EventoTracking(
         trackingId=tracking_id,
