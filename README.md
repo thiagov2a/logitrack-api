@@ -11,7 +11,7 @@
 
 ## Descripción
 
-LogiTrack es el **Paquete Base** del Sistema Federal de Gestión de Logística y Distribución (SFGLD). En esta iteración (Sprint 1) se desarrolló una Mock API que simula el registro, seguimiento y cambio de estados de envíos logísticos. En futuras etapas se integrará un modelo de Machine Learning para predecir la prioridad de los envíos.
+LogiTrack es el **Paquete Base** del Sistema Federal de Gestión de Logística y Distribución (SFGLD). En esta iteración (Sprint 2) se desarrolló una Mock API que simula el registro, seguimiento y cambio de estados de envíos logísticos. En futuras etapas se integrará un modelo de Machine Learning para predecir la prioridad de los envíos.
 
 ## Stack Tecnológico
 
@@ -30,9 +30,10 @@ LogiTrack es el **Paquete Base** del Sistema Federal de Gestión de Logística y
 ```
 /
 ├── .github/workflows/  # Pipeline de CI
-├── docs/               # Documentación (ADRs, NFRs, Trazabilidad, Ley 25.326)
-├── models/             # Entidades de dominio (Envio, Cliente, Tracking, Enums)
-├── routers/            # Endpoints de la API
+├── docs/               # Documentación (Trazabilidad, Plan de Pruebas, Ley 25.326)
+├── src/
+│   ├── models/         # Entidades de dominio (Envio, Cliente, Tracking, Enums)
+│   └── routers/        # Endpoints de la API
 ├── tests/              # Tests automatizados
 ├── main.py             # Punto de entrada
 ├── CONTRIBUTING.md     # Guía de contribución

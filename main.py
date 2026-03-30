@@ -1,9 +1,9 @@
 from fastapi import FastAPI
-from routers import envios
+from src.routers import envios
 import uvicorn
 
 app = FastAPI(
-    title="LogiTrack API", description="Mock API para el TP (Sprint 1)", version="1.0.0"
+    title="LogiTrack API", description="Mock API para el TP (Sprint 2)", version="2.0.0"
 )
 
 # Conectamos las rutas de envíos
