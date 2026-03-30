@@ -161,7 +161,7 @@ pytest tests/ -v
 | `docs/TRAZABILIDAD.md` | Matriz Historia ↔ Caso de Prueba ↔ Commit/PR |
 | `docs/ADRs.md` | Decisiones de arquitectura (ADR-001 a ADR-003) |
 | `docs/NFRs.md` | Atributos de calidad |
-| `docs/PlanDePruebas.csv` | Plan de pruebas en formato Given/When/Then |
+| [Plan de Pruebas](https://docs.google.com/spreadsheets/d/1v310kejrffdqwqZR1RJRPvTJB3oT0CWtliUTe_sKkAk/edit?gid=0#gid=0) | Plan de pruebas en formato Given/When/Then |
 | [Registro de Riesgos](https://docs.google.com/spreadsheets/d/1v310kejrffdqwqZR1RJRPvTJB3oT0CWtliUTe_sKkAk/edit?gid=115120055#gid=115120055) | Matriz de riesgos con probabilidad, impacto y respuesta |
 | `CONTRIBUTING.md` | Guía de contribución y flujo de trabajo |
 
