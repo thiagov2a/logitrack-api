@@ -151,7 +151,7 @@ def listar_envios(
     if fecha_hasta:
         resultado = [e for e in resultado if e.fechaCreacion <= fecha_hasta]
 
-    return sorted(resultado, key=lambda e: e.fechaCreacion)
+    return sorted(resultado, key=lambda e: e.fechaCreacion.replace(tzinfo=None))
 
 
 # US-12: Buscar envio por Tracking ID
