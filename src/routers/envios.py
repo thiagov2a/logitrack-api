@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Query, Header
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
-from src.models.envio import Envio
+from src.models.envio import Envio, Dimensiones
 from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
 from src.models.enums import EstadoEnvio
