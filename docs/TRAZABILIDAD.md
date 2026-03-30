@@ -29,6 +29,10 @@
 | US-15 | Como Operador, quiero recibir error si fecha_desde es mayor a fecha_hasta | `test_filtrar_envios_fecha_desde_mayor_hasta_retorna_400` | `tests/test_envios.py` | `feat/roles-operador-supervisor` |
 | US-16/18/20 | Como Supervisor, quiero cambiar el estado siguiendo el flujo lógico con auditoría y observaciones | `test_cambiar_estado_envio` | `tests/test_envios.py` | PR #6 — `feat/us-16-cambiar-estado-individual-de-envío` (`e5b83c7`) |
 | US-19 | Como Operador, quiero ver el historial completo de estados de un envío | `test_historial_envio_retorna_lista` `test_historial_envio_inexistente_retorna_404` | `tests/test_envios.py` | PR #7 — `feat/us-19-historial-de-estados-en-detalle` (`711fe5f`) |
+| US-11/14/15 | Como Operador, quiero ver y filtrar envíos desde la interfaz web | Vista `/` con filtros de estado y fecha | `templates/envios.html` | `feat/vistas-ui` |
+| US-07 | Como Operador, quiero registrar un envío desde la interfaz web | Formulario `/envios/nuevo` | `templates/nuevo_envio.html` | `feat/vistas-ui` |
+| US-13 | Como Operador, quiero ver el detalle completo desde la interfaz web | Vista `/envios/{tracking_id}` con timeline | `templates/detalle.html` | `feat/vistas-ui` |
+| US-08 | Como Supervisor, quiero cambiar el estado desde la interfaz web | Panel Supervisor en vista de detalle | `templates/detalle.html` | `feat/vistas-ui` |
 
 ---
 
