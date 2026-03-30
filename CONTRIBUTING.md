@@ -1,9 +1,5 @@
 # Guía de Contribución — LogiTrack
 
-## Requisitos previos
-- Python 3.11+
-- Git
-
 ## Configuración del entorno
 
 ```bash
@@ -50,7 +46,7 @@ test: agrega tests para US-12
 2. Desarrollar y commitear con la convención de commits
 3. Correr linter y tests antes de pushear:
    ```bash
-   python -m flake8 . --max-line-length=120 --exclude=venv
+   flake8 . --max-line-length=120 --exclude=venv
    pytest tests/ -v
    ```
 4. Abrir Pull Request hacia `main`
@@ -58,6 +54,6 @@ test: agrega tests para US-12
 
 ## Equipo
 
-- Mauricio Santiago Quevedo
-- Pablo Ariel Rodriguez
-- Thiago Joel Vildosa
+- Mauricio Santiago **Quevedo** — 46.340.138
+- Pablo Ariel **Rodriguez** — 39.109.268
+- Thiago Joel **Vildosa** — 45.815.384

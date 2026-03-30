@@ -1,34 +1,84 @@
 # LogiTrack (SFGLD) - Grupo 10
 
-**Universidad Nacional de General Sarmiento (UNGS)**
+**Universidad Nacional de General Sarmiento (UNGS)**  
 **Materia:** Proyecto Profesional I / Laboratorio de Construcción de Software
+
+![CI](https://github.com/thiagov2a/logitrack-api/actions/workflows/ci.yml/badge.svg)
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.135-green)
 
 ---
 
-## Descripción del Proyecto
-Este repositorio contiene el código fuente del MVP (Mínimo Producto Viable) de LogiTrack, correspondiente al TP Inicial. 
+## Descripción
 
-En esta iteración (Sprint 1), desarrollamos una Mock API que simula el registro, seguimiento y cambio de estados de envíos logísticos. Esta arquitectura funciona como el "Paquete Base" sobre el cual, en futuras etapas, se integrará el modelo de Machine Learning para predecir la prioridad de los envíos.
+LogiTrack es el **Paquete Base** del Sistema Federal de Gestión de Logística y Distribución (SFGLD). En esta iteración (Sprint 1) se desarrolló una Mock API que simula el registro, seguimiento y cambio de estados de envíos logísticos. En futuras etapas se integrará un modelo de Machine Learning para predecir la prioridad de los envíos.
 
 ## Stack Tecnológico
-* **Lenguaje:** Python
-* **Framework Web:** FastAPI
-* **Servidor:** Uvicorn
-* **Modelado de Datos:** Pydantic
-* **Control de Versiones y CI:** Git / GitHub Actions
+
+| Herramienta | Uso |
+|---|---|
+| Python 3.11 | Lenguaje principal |
+| FastAPI | Framework web |
+| Uvicorn | Servidor ASGI |
+| Pydantic | Modelado y validación de datos |
+| Pytest + HTTPX | Testing |
+| Flake8 | Linter |
+| GitHub Actions | CI/CD |
 
 ## Estructura del Repositorio
-El proyecto sigue una arquitectura separada por responsabilidades para evitar importaciones circulares:
 
-```text
+```
 /
-├── docs/           # Documentación formal (ADRs, NFRs, Análisis Ley 25.326)
-├── models/         # Entidades de dominio (Envio, Cliente, Tracking, Enums)
-├── routers/        # Controladores y endpoints de la API
-└── main.py         # Punto de entrada de la aplicación
+├── .github/workflows/  # Pipeline de CI
+├── docs/               # Documentación (ADRs, NFRs, Trazabilidad, Ley 25.326)
+├── models/             # Entidades de dominio (Envio, Cliente, Tracking, Enums)
+├── routers/            # Endpoints de la API
+├── tests/              # Tests automatizados
+├── main.py             # Punto de entrada
+├── CONTRIBUTING.md     # Guía de contribución
+└── requirements.txt    # Dependencias
+```
+
+## Instalación y ejecución
+
+```bash
+git clone https://github.com/thiagov2a/logitrack-api.git
+cd logitrack-api
+python -m venv venv
+venv\Scripts\activate        # Windows
+pip install -r requirements.txt
+python main.py
+```
+
+La API queda disponible en `http://127.0.0.1:8000`.  
+Documentación interactiva (Swagger): `http://127.0.0.1:8000/docs`
+
+## Endpoints
+
+| Método | Ruta | Descripción | US |
+|---|---|---|---|
+| `POST` | `/api/envios/` | Registrar nuevo envío | US-07 |
+| `GET` | `/api/envios/` | Listar todos los envíos | US-11 |
+| `GET` | `/api/envios/{tracking_id}` | Buscar envío por Tracking ID | US-12 |
+| `GET` | `/api/envios/{tracking_id}/detalles` | Detalle completo con historial | US-13 |
+| `PATCH` | `/api/envios/{tracking_id}/estado` | Cambiar estado manualmente | US-08 |
+| `PATCH` | `/api/envios/{tracking_id}/avanzar_estado` | Avanzar al siguiente estado | US-16/18/20 |
+| `GET` | `/api/envios/{tracking_id}/historial_estado` | Ver historial de estados | US-19 |
+
+## Estados del envío
+
+```
+INICIADO → EN_SUCURSAL → EN_TRANSITO → ENTREGADO
+```
+
+## Tests
+
+```bash
+pytest tests/ -v
 ```
 
 ## Equipo de Desarrollo
-* Mauricio Santiago **Quevedo - 46.340.138**
-* Pablo Ariel **Rodriguez - 39.109.268**
-* Thiago Joel **Vildosa - 45.815.384**
+
+- Mauricio Santiago **Quevedo** — 46.340.138
+- Pablo Ariel **Rodriguez** — 39.109.268
+- Thiago Joel **Vildosa** — 45.815.384
