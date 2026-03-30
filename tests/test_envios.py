@@ -157,6 +157,25 @@ def test_filtrar_envios_fecha_futura_retorna_vacio(client):
     assert len(response.json()) == 0
 
 
+def test_filtrar_envios_fecha_desde_mayor_hasta_retorna_400(client):
+    response = client.get("/api/envios/?fecha_desde=2099-01-01T00:00:00&fecha_hasta=2000-01-01T00:00:00")
+    assert response.status_code == 400
+
+
+def test_listar_envios_ordenados_por_fecha(client):
+    payload = {"origen": "Salta", "destino": "Jujuy", "remitente": {"dni": "11111111", "nombre": "Test"}}
+    client.post("/api/envios/", json=payload)
+    response = client.get("/api/envios/")
+    fechas = [e["fechaCreacion"] for e in response.json()]
+    assert fechas == sorted(fechas)
+
+
+def test_detalle_envio_incluye_destinatario(client):
+    response = client.get("/api/envios/TRK-TEST01/detalles")
+    assert response.status_code == 200
+    assert "destinatario" in response.json()
+
+
 # --- US-16/18/20: Avanzar estado (eliminado, consolidado en /estado) ---
 
 

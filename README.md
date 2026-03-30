@@ -55,15 +55,23 @@ Documentación interactiva (Swagger): `http://127.0.0.1:8000/docs`
 
 ## Endpoints
 
-| Método | Ruta | Descripción | US |
-|---|---|---|---|
-| `POST` | `/api/envios/` | Registrar nuevo envío | US-07 |
-| `GET` | `/api/envios/` | Listar todos los envíos | US-11 |
-| `GET` | `/api/envios/{tracking_id}` | Buscar envío por Tracking ID | US-12 |
-| `GET` | `/api/envios/{tracking_id}/detalles` | Detalle completo con historial | US-13 |
-| `PATCH` | `/api/envios/{tracking_id}/estado` | Cambiar estado manualmente | US-08 |
-| `PATCH` | `/api/envios/{tracking_id}/avanzar_estado` | Avanzar al siguiente estado | US-16/18/20 |
-| `GET` | `/api/envios/{tracking_id}/historial_estado` | Ver historial de estados | US-19 |
+| Método | Ruta | Descripción | Rol | US |
+|---|---|---|---|---|
+| `POST` | `/api/envios/` | Registrar nuevo envío | Operador | US-07 |
+| `GET` | `/api/envios/` | Listar envíos (filtros opcionales por estado y fecha) | Operador | US-11/14/15 |
+| `GET` | `/api/envios/{tracking_id}` | Buscar envío por Tracking ID | Operador | US-12 |
+| `GET` | `/api/envios/{tracking_id}/detalles` | Detalle completo con historial | Operador | US-13 |
+| `GET` | `/api/envios/{tracking_id}/historial_estado` | Ver historial de estados | Operador | US-19 |
+| `PATCH` | `/api/envios/{tracking_id}` | Editar datos en estado INICIADO | Operador | US-09 |
+| `PATCH` | `/api/envios/{tracking_id}/cancelar` | Cancelar envío en estado INICIADO | Operador | US-10 |
+| `PATCH` | `/api/envios/{tracking_id}/estado` | Cambiar estado (requiere `X-Rol: supervisor`) | Supervisor | US-08/16/18/20 |
+
+## Roles
+
+| Rol | Header | Permisos |
+|---|---|---|
+| Operador | `X-Rol: operador` | Registrar, listar, buscar, editar, cancelar |
+| Supervisor | `X-Rol: supervisor` | Todo lo anterior + cambiar estado |
 
 ## Estados del envío
 

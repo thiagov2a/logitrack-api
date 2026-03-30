@@ -117,10 +117,13 @@ def listar_envios(
     US-14: Filtrar por uno o varios estados. Ejemplo: ?estados=INICIADO&estados=EN_SUCURSAL
     US-15: Filtrar por rango de fecha de creacion. Ejemplo: ?fecha_desde=2024-01-01&fecha_hasta=2024-12-31
     """
-    resultado = mock_db_envios
+    resultado = list(mock_db_envios)
 
     if estados:
         resultado = [e for e in resultado if _estado_actual(e) in estados]
+
+    if fecha_desde and fecha_hasta and fecha_desde > fecha_hasta:
+        raise HTTPException(status_code=400, detail="fecha_desde no puede ser mayor a fecha_hasta.")
 
     if fecha_desde:
         resultado = [e for e in resultado if e.fechaCreacion >= fecha_desde]
@@ -128,7 +131,7 @@ def listar_envios(
     if fecha_hasta:
         resultado = [e for e in resultado if e.fechaCreacion <= fecha_hasta]
 
-    return resultado
+    return sorted(resultado, key=lambda e: e.fechaCreacion)
 
 
 # US-12: Buscar envio por Tracking ID
