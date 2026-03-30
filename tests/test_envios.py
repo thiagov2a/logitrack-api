@@ -1,11 +1,11 @@
 import pytest
 from fastapi.testclient import TestClient
 from main import app
-from routers import envios as envios_module
-from models.envio import Envio
-from models.cliente import Cliente
-from models.tracking import EventoTracking
-from models.enums import EstadoEnvio
+from src.routers import envios as envios_module
+from src.models.envio import Envio
+from src.models.cliente import Cliente
+from src.models.tracking import EventoTracking
+from src.models.enums import EstadoEnvio
 
 
 def _seed():
