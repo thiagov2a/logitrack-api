@@ -25,10 +25,19 @@ def vista_listado(
     fecha_hasta: Optional[str] = None,
     rol: Optional[str] = None,
 ):
+    from datetime import datetime
     resultado = list(mock_db_envios)
 
     if estado:
         resultado = [e for e in resultado if e.historial and e.historial[-1].estado_actual == estado]
+
+    if fecha_desde:
+        dt_desde = datetime.strptime(fecha_desde, "%Y-%m-%d")
+        resultado = [e for e in resultado if e.fechaCreacion >= dt_desde]
+
+    if fecha_hasta:
+        dt_hasta = datetime.strptime(fecha_hasta, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
+        resultado = [e for e in resultado if e.fechaCreacion <= dt_hasta]
 
     return _render(
         "envios.html", request,
