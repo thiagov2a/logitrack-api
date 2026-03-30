@@ -64,20 +64,40 @@ def _buscar_envio(tracking_id: str) -> Envio:
 
 # --- Datos semilla ---
 
-def _crear_semilla(origen, destino, dni, nombre, estado) -> Envio:
+def _crear_semilla(
+    origen: str, 
+    destino: str, 
+    dni: str, 
+    nombre: str, 
+    estado: EstadoEnvio,
+    peso: float = None,
+    largo: float = None,
+    ancho: float = None,
+    alto: float = None
+) -> Envio:
+    
+    dims = None
+    if largo is not None and ancho is not None and alto is not None:
+        dims = Dimensiones(largo_cm=largo, ancho_cm=ancho, alto_cm=alto)
+
     envio = Envio(
         trackingId=f"TRK-{uuid.uuid4().hex[:8].upper()}",
         origen=origen,
         destino=destino,
+        peso_kg=peso,
+        dimensiones=dims,  
         remitente=Cliente(dni=dni, nombre=nombre),
     )
+    
     envio.historial.append(
         EventoTracking(trackingId=envio.trackingId, estado_actual=EstadoEnvio.INICIADO, ubicacion=origen)
     )
+    
     if estado != EstadoEnvio.INICIADO:
         envio.historial.append(
             EventoTracking(trackingId=envio.trackingId, estado_actual=estado, ubicacion=destino)
         )
+        
     return envio
 
 
