@@ -18,6 +18,7 @@ def _render(template: str, request: Request, **kwargs):
 
 
 @router.get("/", response_class=HTMLResponse)
+@router.head("/")
 def vista_listado(
     request: Request,
     estado: Optional[str] = None,
