@@ -8,6 +8,7 @@
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.135-green)
 ![Tests](https://img.shields.io/badge/Tests-22%20passed-brightgreen)
 ![Linter](https://img.shields.io/badge/Linter-Flake8-yellow)
+[![Deploy](https://img.shields.io/badge/Deploy-Render-46E3B7)](https://logitrack-api-6nj5.onrender.com/)
 
 ---
 
@@ -39,8 +40,7 @@ LogiTrack es el **Paquete Base** del Sistema Federal de Gestión de Logística y
 ├── docs/
 │   ├── TRAZABILIDAD.md     # Matriz Historia ↔ Test ↔ Commit
 │   ├── ADRs.md             # Decisiones de arquitectura
-│   ├── NFRs.md             # Requisitos no funcionales
-│   └── PlanDePruebas.csv   # Plan de pruebas Given/When/Then
+│   └── NFRs.md             # Atributos de calidad
 ├── src/
 │   ├── models/             # Entidades de dominio
 │   │   ├── envio.py
