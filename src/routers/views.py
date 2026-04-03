@@ -52,7 +52,7 @@ def vista_listado(
 
 @router.get("/envios/nuevo", response_class=HTMLResponse)
 def vista_nuevo_envio(request: Request, rol: Optional[str] = None):
-    return _render("nuevo_envio.html", request, error=None, rol=rol)
+    return _render("nuevo_envio.html", request, error=None, rol=rol, datos={})
 
 
 @router.post("/envios/nuevo")
@@ -61,24 +61,42 @@ def crear_envio_form(
     origen: str = Form(...),
     destino: str = Form(...),
     remitente_dni: str = Form(...),
-    remitente_nombre: Optional[str] = Form(None),
-    destinatario_dni: Optional[str] = Form(None),
-    destinatario_nombre: Optional[str] = Form(None),
+    remitente_nombre: str = Form(...),
+    destinatario_dni: str = Form(...),
+    destinatario_nombre: str = Form(...),
     consentimiento: Optional[str] = Form(None),
     rol: Optional[str] = Form(None),
 ):
-    destinatario = None
-    if destinatario_dni:
+    from pydantic import ValidationError
+
+    datos = {
+        "origen": origen,
+        "destino": destino,
+        "remitente_dni": remitente_dni,
+        "remitente_nombre": remitente_nombre,
+        "destinatario_dni": destinatario_dni or "",
+        "destinatario_nombre": destinatario_nombre or "",
+    }
+
+    if not consentimiento:
+        return _render("nuevo_envio.html", request,
+                       error="Debe aceptar las políticas de privacidad.", rol=rol, datos=datos)
+
+    try:
         destinatario = Cliente(dni=destinatario_dni, nombre=destinatario_nombre)
 
-    nuevo_envio = Envio(
-        trackingId=f"TRK-{uuid.uuid4().hex[:8].upper()}",
-        origen=origen,
-        destino=destino,
-        consentimiento=consentimiento == "on",
-        remitente=Cliente(dni=remitente_dni, nombre=remitente_nombre),
-        destinatario=destinatario,
-    )
+        nuevo_envio = Envio(
+            trackingId=f"TRK-{uuid.uuid4().hex[:8].upper()}",
+            origen=origen,
+            destino=destino,
+            consentimiento=True,
+            remitente=Cliente(dni=remitente_dni, nombre=remitente_nombre),
+            destinatario=destinatario,
+        )
+    except ValidationError as e:
+        errores = " | ".join([err["msg"].replace("Value error, ", "") for err in e.errors()])
+        return _render("nuevo_envio.html", request, error=errores, rol=rol, datos=datos)
+
     nuevo_envio.historial.append(EventoTracking(
         trackingId=nuevo_envio.trackingId,
         estado_actual=EstadoEnvio.INICIADO,

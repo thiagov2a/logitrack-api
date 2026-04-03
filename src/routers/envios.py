@@ -88,6 +88,7 @@ def _crear_semilla(
         peso_kg=peso,
         dimensiones=dims,
         remitente=Cliente(dni=dni, nombre=nombre),
+        destinatario=Cliente(dni="00000000", nombre="Destinatario Ejemplo"),
     )
 
     envio.historial.append(
