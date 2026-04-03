@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Optional, List
 from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
+from src.models.enums import PrioridadEnvio
 
 
 class Dimensiones(BaseModel):
@@ -30,6 +31,10 @@ class Envio(BaseModel):
     )
     consentimiento: bool = True
     prioridadManual: bool = False
+    prioridad_ml: Optional[PrioridadEnvio] = Field(
+        default=None,
+        description="Prioridad clasificada automáticamente por el modelo ML"
+    )
     activo: bool = True
 
     # Clientes (Relacion 1 a 1)

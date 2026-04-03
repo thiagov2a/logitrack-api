@@ -8,8 +8,23 @@ BASE_DIR = os.path.dirname(__file__)
 
 df = pd.read_csv(os.path.join(BASE_DIR, "dataset_envios_ml.csv"))
 
+
+def clasificar_prioridad(row):
+    peso = row["peso_kg"]
+    volumen = row["largo_cm"] * row["ancho_cm"] * row["alto_cm"]
+    if pd.isna(volumen):
+        volumen = 0
+    if peso > 15 or volumen > 100_000:
+        return "ALTA"
+    if peso > 5 or volumen > 30_000:
+        return "MEDIA"
+    return "BAJA"
+
+
+df["prioridad"] = df.apply(clasificar_prioridad, axis=1)
+
 FEATURES = ["peso_kg", "largo_cm", "ancho_cm", "alto_cm"]
-TARGET = "prioridadManual"
+TARGET = "prioridad"
 
 X = df[FEATURES]
 y = df[TARGET]
@@ -27,3 +42,5 @@ with open(os.path.join(BASE_DIR, "imputer.pkl"), "wb") as f:
     pickle.dump(imputer, f)
 
 print("Modelo e imputer exportados correctamente.")
+print("Distribucion de clases:")
+print(df[TARGET].value_counts())
