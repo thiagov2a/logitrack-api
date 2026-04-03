@@ -43,6 +43,10 @@ class ConfirmacionCancelacion(BaseModel):
     confirmar: bool
 
 
+class ConfirmacionAnonimizacion(BaseModel):
+    confirmar: bool
+
+
 # --- Helpers ---
 
 FLUJO_ESTADOS = [
@@ -76,6 +80,10 @@ def _buscar_envio(tracking_id: str) -> Envio:
 
 def _es_estado_terminal(estado: EstadoEnvio) -> bool:
     return estado in ESTADOS_TERMINALES
+
+
+def _esta_finalizado(envio: Envio) -> bool:
+    return _estado_actual(envio) in [EstadoEnvio.ENTREGADO, EstadoEnvio.CANCELADO]
 
 
 # --- Datos semilla ---
@@ -137,6 +145,7 @@ mock_db_envios = [
 # US-07: Registrar envio
 @router.post("/", status_code=201)
 def registrar_envio(nuevo_envio: Envio):
+    """US-07: Registro individual de envio con Tracking ID autogenerado."""
     nuevo_envio.trackingId = f"TRK-{uuid.uuid4().hex[:8].upper()}"
     nuevo_envio.historial.append(EventoTracking(
         trackingId=nuevo_envio.trackingId,
@@ -152,13 +161,18 @@ def registrar_envio(nuevo_envio: Envio):
     }
 
 
-# US-11 / US-14 / US-15
+# US-11 / US-14 / US-15: Listar envios con filtros opcionales
 @router.get("/")
 def listar_envios(
     estados: Optional[List[EstadoEnvio]] = Query(None),
     fecha_desde: Optional[datetime] = Query(None),
     fecha_hasta: Optional[datetime] = Query(None),
 ):
+    """
+    US-11: Listado general de envios.
+    US-14: Filtrar por uno o varios estados. Ejemplo: ?estados=INICIADO&estados=EN_SUCURSAL
+    US-15: Filtrar por rango de fecha de creacion. Ejemplo: ?fecha_desde=2024-01-01&fecha_hasta=2024-12-31
+    """
     resultado = list(mock_db_envios)
 
     if estados:
@@ -179,12 +193,13 @@ def listar_envios(
     return sorted(resultado, key=lambda e: e.fechaCreacion.replace(tzinfo=None))
 
 
-# US-17: Cambio de estado masivo
+# US-17: Cambio de estado masivo (solo Supervisor)
 @router.patch("/estado-masivo")
 def cambiar_estado_masivo(
     body: CambioEstadoMasivoRequest,
     x_rol: str = Header(...)
 ):
+    """US-17: Permite cambiar el estado de multiples envios seleccionados. Solo accesible para Supervisor."""
     if x_rol.lower() != "supervisor":
         raise HTTPException(
             status_code=403,
@@ -235,9 +250,10 @@ def cambiar_estado_masivo(
     }
 
 
-# US-12
+# US-12: Buscar envio por Tracking ID
 @router.get("/{tracking_id}")
 def buscar_resumen_envio(tracking_id: str):
+    """US-12: Devuelve informacion principal y estado actual del envio."""
     envio = _buscar_envio(tracking_id)
     return {
         "trackingId": envio.trackingId,
@@ -247,25 +263,28 @@ def buscar_resumen_envio(tracking_id: str):
     }
 
 
-# US-13
+# US-13: Detalle completo con historial
 @router.get("/{tracking_id}/detalles")
 def buscar_detalle_envio(tracking_id: str):
+    """US-13: Devuelve toda la informacion del envio incluyendo historial de eventos."""
     return _buscar_envio(tracking_id)
 
 
-# US-19
+# US-19: Historial de estados
 @router.get("/{tracking_id}/historial_estado")
 def historial_envio(tracking_id: str):
+    """US-19: Devuelve el historial completo de eventos del envio."""
     return _buscar_envio(tracking_id).historial
 
 
-# US-08 / US-16 / US-18 / US-20
+# US-08 / US-16 / US-18 / US-20: Cambio de estado (solo Supervisor)
 @router.patch("/{tracking_id}/estado")
 def cambiar_estado_envio(
     tracking_id: str,
     body: CambioEstadoRequest,
     x_rol: str = Header(...)
 ):
+    """US-08/16/18/20: Cambia el estado del envio. Solo accesible para Supervisor."""
     if x_rol.lower() != "supervisor":
         raise HTTPException(
             status_code=403,
@@ -295,9 +314,10 @@ def cambiar_estado_envio(
     }
 
 
-# US-09
+# US-09: Editar datos del envio en estado INICIADO
 @router.patch("/{tracking_id}")
 def editar_envio(tracking_id: str, datos: EnvioUpdate):
+    """US-09: Permite editar datos del envio solo si esta en estado INICIADO."""
     envio = _buscar_envio(tracking_id)
 
     if _estado_actual(envio) != EstadoEnvio.INICIADO:
@@ -323,9 +343,10 @@ def editar_envio(tracking_id: str, datos: EnvioUpdate):
     return {"mensaje": "Envio editado con exito", "envio": envio}
 
 
-# US-10
+# US-10: Cancelar envio en estado INICIADO
 @router.patch("/{tracking_id}/cancelar")
 def cancelar_envio(tracking_id: str, confirmacion: ConfirmacionCancelacion):
+    """US-10: Cancela el envio si esta en estado INICIADO y se confirma la accion."""
     envio = _buscar_envio(tracking_id)
 
     if not confirmacion.confirmar:
@@ -348,3 +369,54 @@ def cancelar_envio(tracking_id: str, confirmacion: ConfirmacionCancelacion):
     ))
 
     return {"mensaje": "Envio cancelado con exito", "envio": envio}
+
+
+# US-22: Anonimización de datos (Derecho al Olvido)
+@router.patch("/{tracking_id}/anonimizar")
+def anonimizar_envio(
+    tracking_id: str,
+    confirmacion: ConfirmacionAnonimizacion,
+    x_rol: str = Header(...)
+):
+    """US-22: Anonimiza irreversiblemente los datos personales de un envio finalizado. Solo Supervisor."""
+    if x_rol.lower() != "supervisor":
+        raise HTTPException(
+            status_code=403,
+            detail="Acceso denegado: se requiere rol Supervisor."
+        )
+
+    if not confirmacion.confirmar:
+        raise HTTPException(
+            status_code=400,
+            detail="La anonimización debe ser confirmada explícitamente."
+        )
+
+    envio = _buscar_envio(tracking_id)
+
+    if not _esta_finalizado(envio):
+        raise HTTPException(
+            status_code=400,
+            detail="Solo se puede anonimizar un envio finalizado."
+        )
+
+    if envio.remitente:
+        envio.remitente.nombre = "***"
+        envio.remitente.dni = "***"
+        if hasattr(envio.remitente, "direccion"):
+            envio.remitente.direccion = "***"
+        if hasattr(envio.remitente, "anonimizado"):
+            envio.remitente.anonimizado = True
+
+    if getattr(envio, "destinatario", None):
+        envio.destinatario.nombre = "***"
+        envio.destinatario.dni = "***"
+        if hasattr(envio.destinatario, "direccion"):
+            envio.destinatario.direccion = "***"
+        if hasattr(envio.destinatario, "anonimizado"):
+            envio.destinatario.anonimizado = True
+
+    return {
+        "mensaje": "Datos personales anonimizados con exito",
+        "trackingId": tracking_id,
+        "envio": envio
+    }
