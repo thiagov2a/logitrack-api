@@ -26,6 +26,7 @@ def _seed_con_tracking(tracking_id: str, origen: str, destino: str, nombre: str,
         origen=origen,
         destino=destino,
         remitente=Cliente(dni="99999999", nombre=nombre),
+        destinatario=Cliente(dni="00000000", nombre="Destinatario Test"),
     )
     e.historial.append(
         EventoTracking(
