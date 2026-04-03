@@ -20,6 +20,33 @@ def _seed():
     return e
 
 
+def _seed_con_tracking(tracking_id: str, origen: str, destino: str, nombre: str, estado: EstadoEnvio):
+    e = Envio(
+        trackingId=tracking_id,
+        origen=origen,
+        destino=destino,
+        remitente=Cliente(dni="99999999", nombre=nombre),
+    )
+    e.historial.append(
+        EventoTracking(
+            trackingId=tracking_id,
+            estado_actual=EstadoEnvio.INICIADO,
+            ubicacion=origen
+        )
+    )
+
+    if estado != EstadoEnvio.INICIADO:
+        e.historial.append(
+            EventoTracking(
+                trackingId=tracking_id,
+                estado_actual=estado,
+                ubicacion=destino
+            )
+        )
+
+    return e
+
+
 @pytest.fixture(autouse=True)
 def reset_db():
     envios_module.mock_db_envios.clear()
@@ -101,6 +128,36 @@ def test_cambiar_estado_envio_cancelado_retorna_400(client):
     assert response.status_code == 400
 
 
+def test_no_permite_cambiar_estado_de_envio_entregado(client):
+    payload_entregado = {
+        "nuevo_estado": "ENTREGADO",
+        "ubicacion": "Cordoba",
+        "observaciones": "Entrega final"
+    }
+
+    response_1 = client.patch(
+        "/api/envios/TRK-TEST01/estado",
+        json=payload_entregado,
+        headers={"x-rol": "supervisor"}
+    )
+    assert response_1.status_code == 200
+
+    payload_cancelado = {
+        "nuevo_estado": "CANCELADO",
+        "ubicacion": "Cordoba",
+        "observaciones": "Intento inválido"
+    }
+
+    response_2 = client.patch(
+        "/api/envios/TRK-TEST01/estado",
+        json=payload_cancelado,
+        headers={"x-rol": "supervisor"}
+    )
+
+    assert response_2.status_code == 400
+    assert "estado terminal" in response_2.json()["detail"]
+
+
 # --- US-09: Editar datos en estado INICIADO ---
 def test_editar_envio_en_estado_iniciado(client):
     payload = {"destino": "Mendoza"}
@@ -179,6 +236,136 @@ def test_detalle_envio_incluye_destinatario(client):
 
 
 # --- US-16/18/20: Avanzar estado (eliminado, consolidado en /estado) ---
+
+
+# --- US-17: Cambio de estado masivo ---
+def test_cambio_estado_masivo_supervisor_actualiza_solo_seleccionados(client):
+    envios_module.mock_db_envios.append(
+        _seed_con_tracking("TRK-TEST02", "Rosario", "Mendoza", "Luis", EstadoEnvio.EN_SUCURSAL)
+    )
+    envios_module.mock_db_envios.append(
+        _seed_con_tracking("TRK-TEST03", "La Plata", "Tucuman", "Maria", EstadoEnvio.INICIADO)
+    )
+
+    payload = {
+        "tracking_ids": ["TRK-TEST01", "TRK-TEST02"],
+        "nuevo_estado": "ENTREGADO",
+        "ubicacion": "Centro de distribución",
+        "observaciones": "Cambio masivo de prueba"
+    }
+
+    response = client.patch(
+        "/api/envios/estado-masivo",
+        json=payload,
+        headers={"x-rol": "supervisor"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["total_actualizados"] == 2
+    assert "TRK-TEST01" in data["actualizados"]
+    assert "TRK-TEST02" in data["actualizados"]
+    assert "TRK-TEST03" not in data["actualizados"]
+
+    envio1 = next(e for e in envios_module.mock_db_envios if e.trackingId == "TRK-TEST01")
+    envio2 = next(e for e in envios_module.mock_db_envios if e.trackingId == "TRK-TEST02")
+    envio3 = next(e for e in envios_module.mock_db_envios if e.trackingId == "TRK-TEST03")
+
+    assert envio1.historial[-1].estado_actual == EstadoEnvio.ENTREGADO
+    assert envio2.historial[-1].estado_actual == EstadoEnvio.ENTREGADO
+    assert envio3.historial[-1].estado_actual == EstadoEnvio.INICIADO
+
+
+def test_cambio_estado_masivo_con_rol_operador_retorna_403(client):
+    payload = {
+        "tracking_ids": ["TRK-TEST01"],
+        "nuevo_estado": "ENTREGADO",
+        "ubicacion": "Centro de distribución",
+        "observaciones": "Intento sin permisos"
+    }
+
+    response = client.patch(
+        "/api/envios/estado-masivo",
+        json=payload,
+        headers={"x-rol": "operador"}
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Acceso denegado: se requiere rol Supervisor."
+
+
+def test_cambio_estado_masivo_sin_seleccion_retorna_400(client):
+    payload = {
+        "tracking_ids": [],
+        "nuevo_estado": "ENTREGADO",
+        "ubicacion": "Centro de distribución",
+        "observaciones": "Sin selección"
+    }
+
+    response = client.patch(
+        "/api/envios/estado-masivo",
+        json=payload,
+        headers={"x-rol": "supervisor"}
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Debe seleccionar al menos un envio."
+
+
+def test_cambio_estado_masivo_omite_envio_cancelado(client):
+    envios_module.mock_db_envios.append(
+        _seed_con_tracking("TRK-TEST02", "Rosario", "Mendoza", "Luis", EstadoEnvio.INICIADO)
+    )
+
+    client.patch("/api/envios/TRK-TEST02/cancelar", json={"confirmar": True})
+
+    payload = {
+        "tracking_ids": ["TRK-TEST02"],
+        "nuevo_estado": "ENTREGADO",
+        "ubicacion": "Centro de distribución",
+        "observaciones": "Intento sobre cancelado"
+    }
+
+    response = client.patch(
+        "/api/envios/estado-masivo",
+        json=payload,
+        headers={"x-rol": "supervisor"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["total_actualizados"] == 0
+    assert len(data["omitidos"]) == 1
+    assert data["omitidos"][0]["trackingId"] == "TRK-TEST02"
+
+
+def test_cambio_masivo_omite_envio_entregado(client):
+    envios_module.mock_db_envios.append(
+        _seed_con_tracking("TRK-TEST02", "Rosario", "Mendoza", "Luis", EstadoEnvio.ENTREGADO)
+    )
+
+    payload = {
+        "tracking_ids": ["TRK-TEST02"],
+        "nuevo_estado": "CANCELADO",
+        "ubicacion": "Centro de distribución",
+        "observaciones": "Intento sobre entregado"
+    }
+
+    response = client.patch(
+        "/api/envios/estado-masivo",
+        json=payload,
+        headers={"x-rol": "supervisor"}
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+
+    assert data["total_actualizados"] == 0
+    assert len(data["omitidos"]) == 1
+    assert data["omitidos"][0]["trackingId"] == "TRK-TEST02"
+    assert "estado terminal" in data["omitidos"][0]["motivo"]
 
 
 # --- US-19: Historial de estados ---
