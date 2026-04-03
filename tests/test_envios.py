@@ -12,6 +12,7 @@ def _seed():
     e = Envio(
         trackingId="TRK-TEST01", origen="Buenos Aires", destino="Cordoba",
         remitente=Cliente(dni="12345678", nombre="Ana"),
+        destinatario=Cliente(dni="87654321", nombre="Carlos"),
     )
     e.historial.append(
         EventoTracking(trackingId="TRK-TEST01", estado_actual=EstadoEnvio.INICIADO, ubicacion="Buenos Aires")
@@ -44,7 +45,8 @@ def test_registrar_envio_genera_tracking_id(client):
     payload = {
         "origen": "Buenos Aires",
         "destino": "Cordoba",
-        "remitente": {"dni": "99999999", "nombre": "Test User"}
+        "remitente": {"dni": "99999999", "nombre": "Test User"},
+        "destinatario": {"dni": "11111111", "nombre": "Test Dest"}
     }
     response = client.post("/api/envios/", json=payload)
     assert response.status_code == 201
