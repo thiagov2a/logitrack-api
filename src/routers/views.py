@@ -242,68 +242,106 @@ async def cambiar_estado_masivo_form(
 @router.post("/envios/{tracking_id}/anonimizar")
 def anonimizar_envio_form(
     tracking_id: str,
-    request: Request,
     confirmar: Optional[str] = Form(None),
+    rol: str = Form(...),
 ):
-    usuario = get_usuario_actual(request)
-    if not usuario or usuario.rol != "supervisor":
-        raise HTTPException(status_code=403, detail="Acceso denegado: solo el Supervisor puede anonimizar.")
+    if (rol or "").lower() != "administrador":
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?rol={rol}&error=Acceso denegado: solo el Administrador puede anonimizar.",
+            status_code=303
+        )
 
     if confirmar != "on":
-        return RedirectResponse(url=f"/envios/{tracking_id}?error=Debe+confirmar+la+anonimizacion", status_code=303)
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?rol={rol}&error=Debe confirmar la anonimización.",
+            status_code=303
+        )
 
     envio = _buscar_envio(tracking_id)
     estado_actual = _estado_actual(envio)
 
-    if estado_actual not in ESTADOS_TERMINALES:
+    if estado_actual not in [EstadoEnvio.ENTREGADO, EstadoEnvio.CANCELADO]:
         return RedirectResponse(
-            url=f"/envios/{tracking_id}?error=Solo+se+puede+anonimizar+un+envio+finalizado", status_code=303
+            url=f"/envios/{tracking_id}?rol={rol}&error=Solo se puede anonimizar un envío finalizado.",
+            status_code=303
         )
 
     if envio.remitente:
         envio.remitente.nombre = "***"
         envio.remitente.dni = "***"
-        envio.remitente.anonimizado = True
+        if hasattr(envio.remitente, "direccion"):
+            envio.remitente.direccion = "***"
+        if hasattr(envio.remitente, "anonimizado"):
+            envio.remitente.anonimizado = True
 
-    if envio.destinatario:
+    if getattr(envio, "destinatario", None):
         envio.destinatario.nombre = "***"
         envio.destinatario.dni = "***"
-        envio.destinatario.anonimizado = True
+        if hasattr(envio.destinatario, "direccion"):
+            envio.destinatario.direccion = "***"
+        if hasattr(envio.destinatario, "anonimizado"):
+            envio.destinatario.anonimizado = True
 
-    return RedirectResponse(url=f"/envios/{tracking_id}?success=Datos+anonimizados+correctamente", status_code=303)
-
+    return RedirectResponse(
+        url=f"/envios/{tracking_id}?rol={rol}&success=Datos personales anonimizados correctamente.",
+        status_code=303
+    )
 
 # --- US-23: Exportación CSV desde HTML ---
 @router.get("/envios/{tracking_id}/exportar-cliente")
 def exportar_cliente_form(
     tracking_id: str,
-    request: Request,
     tipo_cliente: str = Query(...),
+    rol: str = Query(...),
 ):
-    usuario = get_usuario_actual(request)
-    if not usuario or usuario.rol != "supervisor":
-        raise HTTPException(status_code=403, detail="Acceso denegado: solo el Supervisor puede exportar datos.")
+    if (rol or "").lower() != "administrador":
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?rol={rol}&error=Acceso denegado: solo el Administrador puede exportar datos.",
+            status_code=303
+        )
 
     envio = _buscar_envio(tracking_id)
 
     tipo_normalizado = (tipo_cliente or "").lower()
     if tipo_normalizado not in ["remitente", "destinatario"]:
-        raise HTTPException(status_code=400, detail="Tipo de cliente inválido.")
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?rol={rol}&error=Tipo de cliente inválido.",
+            status_code=303
+        )
 
     cliente = envio.remitente if tipo_normalizado == "remitente" else envio.destinatario
 
     if not cliente:
-        raise HTTPException(status_code=404, detail=f"El envío no tiene {tipo_normalizado} registrado.")
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?rol={rol}&error=El envío no tiene {tipo_normalizado} registrado.",
+            status_code=303
+        )
 
     output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["tracking_id", "tipo_cliente", "nombre", "dni", "anonimizado"])
+    writer = csv.writer(
+        output,
+        delimiter=";",
+        quotechar='"',
+        quoting=csv.QUOTE_ALL,
+        lineterminator="\n"
+    )
+
+    writer.writerow([
+        "tracking_id",
+        "tipo_cliente",
+        "nombre",
+        "dni",
+        "direccion",
+        "anonimizado"
+    ])
+
     writer.writerow([
         envio.trackingId,
         tipo_normalizado,
         getattr(cliente, "nombre", "") or "",
         getattr(cliente, "dni", "") or "",
-        getattr(cliente, "anonimizado", False),
+        getattr(cliente, "direccion", "") or "",
+        str(getattr(cliente, "anonimizado", False)),
     ])
 
     output.seek(0)

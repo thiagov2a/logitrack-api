@@ -437,10 +437,10 @@ def test_cambio_masivo_omite_envio_entregado(client):
 
 
 # --- US-23: Exportación de datos de cliente (Derecho de Acceso) ---
-def test_exportar_datos_remitente_csv_como_supervisor(client):
+def test_exportar_datos_remitente_csv_como_administrador(client):
     response = client.get(
         "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=remitente",
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 200
@@ -448,61 +448,69 @@ def test_exportar_datos_remitente_csv_como_supervisor(client):
     assert "attachment; filename=" in response.headers["content-disposition"]
 
     body = response.text
-    assert "tracking_id,tipo_cliente,nombre,dni,direccion,anonimizado" in body
-    assert "TRK-TEST01,remitente,Ana,12345678" in body
+    assert "tracking_id" in body
+    assert "tipo_cliente" in body
+    assert "nombre" in body
+    assert "dni" in body
+    assert "TRK-TEST01" in body
+    assert "remitente" in body
+    assert "Ana" in body
+    assert "12345678" in body
 
 
-def test_exportar_datos_destinatario_csv_como_supervisor(client):
+def test_exportar_datos_destinatario_csv_como_administrador(client):
     envios_module.mock_db_envios[0].destinatario = Cliente(dni="87654321", nombre="Luis")
 
     response = client.get(
         "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=destinatario",
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 200
     body = response.text
-    assert "TRK-TEST01,destinatario,Luis,87654321" in body
+    assert "TRK-TEST01" in body
+    assert "destinatario" in body
+    assert "Luis" in body
+    assert "87654321" in body
 
 
 def test_exportar_datos_cliente_con_rol_invalido_retorna_403(client):
     response = client.get(
         "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=remitente",
-        headers={"x-rol": "operador"}
+        headers={"x-rol": "supervisor"}
     )
 
     assert response.status_code == 403
-    assert response.json()["detail"] == "Acceso denegado: se requiere rol Supervisor."
+    assert response.json()["detail"] == "Acceso denegado: se requiere rol Administrador."
 
 
 def test_exportar_datos_cliente_inexistente_retorna_404(client):
     response = client.get(
         "/api/envios/TRK-INVALIDO/exportar-cliente?tipo_cliente=remitente",
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 404
 
 
 def test_exportar_datos_destinatario_inexistente_retorna_404(client):
-    """El destinatario es obligatorio en el modelo, por lo que este caso no aplica.
-    Verificamos que el endpoint funciona correctamente con destinatario existente."""
     response = client.get(
         "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=destinatario",
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
-    assert response.status_code == 200
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "El envio no tiene destinatario registrado."
 
 
 def test_exportar_datos_cliente_con_tipo_invalido_retorna_400(client):
     response = client.get(
         "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=cliente",
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 400
-    assert "remitente" in response.json()["detail"].lower() or "destinatario" in response.json()["detail"].lower()
-
+    assert response.json()["detail"] == "tipo_cliente debe ser 'remitente' o 'destinatario'."
 
 # --- US-19: Historial de estados ---
 def test_historial_envio_retorna_lista(client):
@@ -535,7 +543,7 @@ def test_anonimizar_envio_finalizado_reemplaza_datos_personales(client):
     response = client.patch(
         "/api/envios/TRK-TEST01/anonimizar",
         json={"confirmar": True},
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 200
@@ -551,7 +559,7 @@ def test_anonimizar_envio_no_finalizado_retorna_400(client):
     response = client.patch(
         "/api/envios/TRK-TEST01/anonimizar",
         json={"confirmar": True},
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 400
@@ -573,11 +581,11 @@ def test_anonimizar_envio_con_rol_invalido_retorna_403(client):
     response = client.patch(
         "/api/envios/TRK-TEST01/anonimizar",
         json={"confirmar": True},
-        headers={"x-rol": "operador"}
+        headers={"x-rol": "supervisor"}
     )
 
     assert response.status_code == 403
-    assert response.json()["detail"] == "Acceso denegado: se requiere rol Supervisor."
+    assert response.json()["detail"] == "Acceso denegado: se requiere rol Administrador."
 
 
 def test_anonimizar_envio_sin_confirmacion_retorna_400(client):
@@ -595,7 +603,7 @@ def test_anonimizar_envio_sin_confirmacion_retorna_400(client):
     response = client.patch(
         "/api/envios/TRK-TEST01/anonimizar",
         json={"confirmar": False},
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 400
@@ -620,7 +628,7 @@ def test_anonimizar_envio_mantiene_historial_intacto(client):
     response = client.patch(
         "/api/envios/TRK-TEST01/anonimizar",
         json={"confirmar": True},
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 200

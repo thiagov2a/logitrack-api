@@ -21,6 +21,7 @@
 {% set estado = envio.historial[-1].estado_actual | string if envio.historial else "DESCONOCIDO" %}
 {% set estado = estado.split('.')[-1] %}
 {% set es_supervisor = ((rol or '')|lower == 'supervisor') %}
+{% set es_administrador = ((rol or '')|lower == 'administrador') %}
 
 <div class="flex items-center justify-between mb-6">
     <a href="/?rol={{ rol or 'operador' }}" class="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition">
@@ -148,10 +149,10 @@
         </div>
         {% endif %}
 
-        <!-- Panel Supervisor — Derecho al Olvido -->
-        {% if es_supervisor %}
+                <!-- Panel Administrador — Derecho al Olvido -->
+        {% if es_administrador %}
         <div class="bg-red-50 border border-red-200 rounded-xl p-6">
-            <h2 class="text-sm font-semibold text-red-800 uppercase tracking-wider mb-4">🛡️ Panel Supervisor — Derecho al Olvido</h2>
+            <h2 class="text-sm font-semibold text-red-800 uppercase tracking-wider mb-4">🛡️ Panel Administrador — Derecho al Olvido</h2>
 
             {% if estado == "ENTREGADO" or estado == "CANCELADO" %}
             <p class="text-sm text-red-700 mb-4">
@@ -160,7 +161,7 @@
             </p>
 
             <form method="post" action="/envios/{{ envio.trackingId }}/anonimizar" class="space-y-4">
-                <input type="hidden" name="rol" value="supervisor">
+                <input type="hidden" name="rol" value="administrador">
 
                 <label class="flex items-center gap-2 text-sm text-gray-700">
                     <input type="checkbox" name="confirmar" class="rounded border-red-300 text-red-600 focus:ring-red-400">
@@ -179,22 +180,22 @@
         </div>
         {% endif %}
 
-        <!-- Panel Supervisor — Derecho de Acceso -->
-        {% if es_supervisor %}
+                <!-- Panel Administrador — Derecho de Acceso -->
+        {% if es_administrador %}
         <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
-            <h2 class="text-sm font-semibold text-blue-800 uppercase tracking-wider mb-4">📄 Panel Supervisor — Derecho de Acceso</h2>
+            <h2 class="text-sm font-semibold text-blue-800 uppercase tracking-wider mb-4">📄 Panel Administrador — Derecho de Acceso</h2>
             <p class="text-sm text-blue-700 mb-4">
                 Podés exportar un archivo CSV con los datos personales almacenados de un cliente en particular.
             </p>
 
             <div class="flex flex-wrap gap-3">
-                <a href="/envios/{{ envio.trackingId }}/exportar-cliente?tipo_cliente=remitente&rol=supervisor"
+                <a href="/envios/{{ envio.trackingId }}/exportar-cliente?tipo_cliente=remitente&rol=administrador"
                    class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
                     Descargar CSV del remitente
                 </a>
 
                 {% if envio.destinatario %}
-                <a href="/envios/{{ envio.trackingId }}/exportar-cliente?tipo_cliente=destinatario&rol=supervisor"
+                <a href="/envios/{{ envio.trackingId }}/exportar-cliente?tipo_cliente=destinatario&rol=administrador"
                    class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
                     Descargar CSV del destinatario
                 </a>
@@ -206,8 +207,6 @@
             </div>
         </div>
         {% endif %}
-
-    </div>
 
     <!-- Timeline -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-fit">
