@@ -88,6 +88,16 @@ def _es_estado_terminal(estado: EstadoEnvio) -> bool:
 def _esta_finalizado(envio: Envio) -> bool:
     return _estado_actual(envio) in [EstadoEnvio.ENTREGADO, EstadoEnvio.CANCELADO]
 
+def _cliente_tiene_datos(cliente) -> bool:
+    if not cliente:
+        return False
+
+    return any([
+        getattr(cliente, "dni", None),
+        getattr(cliente, "nombre", None),
+        getattr(cliente, "direccion", None),
+    ])
+
 
 # --- Datos semilla ---
 
@@ -457,11 +467,11 @@ def exportar_datos_cliente(
 
     cliente = envio.remitente if tipo_normalizado == "remitente" else envio.destinatario
 
-    if not cliente:
+    if not _cliente_tiene_datos(cliente):
         raise HTTPException(
             status_code=404,
             detail=f"El envio no tiene {tipo_normalizado} registrado."
-        )
+    )
 
     output = io.StringIO()
     writer = csv.writer(

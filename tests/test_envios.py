@@ -494,6 +494,8 @@ def test_exportar_datos_cliente_inexistente_retorna_404(client):
 
 
 def test_exportar_datos_destinatario_inexistente_retorna_404(client):
+    envios_module.mock_db_envios[0].destinatario = None
+
     response = client.get(
         "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=destinatario",
         headers={"x-rol": "administrador"}
