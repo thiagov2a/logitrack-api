@@ -1,8 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from datetime import datetime
 from typing import Optional, List
 from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
+import re
 
 
 class Dimensiones(BaseModel):
@@ -32,9 +33,18 @@ class Envio(BaseModel):
     prioridadManual: bool = False
     activo: bool = True
 
+    @field_validator("origen", "destino")
+    @classmethod
+    def validar_ciudad(cls, v):
+        if not v or len(v.strip()) < 2:
+            raise ValueError("El campo debe tener al menos 2 caracteres.")
+        if not re.fullmatch(r"[a-zA-Zà-ÿ\s]+", v):
+            raise ValueError("Solo se permiten letras y espacios.")
+        return v.strip()
+
     # Clientes (Relacion 1 a 1)
     remitente: Cliente
-    destinatario: Optional[Cliente] = None
+    destinatario: Cliente
 
     # Lista de Eventos (Relacion 1 a Muchos)
     historial: List[EventoTracking] = Field(
