@@ -431,6 +431,7 @@ def anonimizar_envio(
         "envio": envio
     }
 
+
 # US-23: Exportación de datos de cliente (Derecho de Acceso)
 @router.get("/{tracking_id}/exportar-cliente")
 def exportar_datos_cliente(
