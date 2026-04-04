@@ -371,6 +371,7 @@ def cancelar_envio(tracking_id: str, confirmacion: ConfirmacionCancelacion):
 
     return {"mensaje": "Envio cancelado con exito", "envio": envio}
 
+
 # US-22: Anonimización de datos (Derecho al Olvido)
 @router.patch("/{tracking_id}/anonimizar")
 def anonimizar_envio(
