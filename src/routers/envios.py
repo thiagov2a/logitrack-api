@@ -111,6 +111,7 @@ def _crear_semilla(
         peso_kg=peso,
         dimensiones=dims,
         remitente=Cliente(dni=dni, nombre=nombre),
+        destinatario=Cliente(dni="00000000", nombre="Destinatario Ejemplo"),
     )
 
     envio.historial.append(
@@ -369,7 +370,6 @@ def cancelar_envio(tracking_id: str, confirmacion: ConfirmacionCancelacion):
     ))
 
     return {"mensaje": "Envio cancelado con exito", "envio": envio}
-
 
 # US-22: Anonimización de datos (Derecho al Olvido)
 @router.patch("/{tracking_id}/anonimizar")

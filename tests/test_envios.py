@@ -12,6 +12,7 @@ def _seed():
     e = Envio(
         trackingId="TRK-TEST01", origen="Buenos Aires", destino="Cordoba",
         remitente=Cliente(dni="12345678", nombre="Ana"),
+        destinatario=Cliente(dni="87654321", nombre="Carlos"),
     )
     e.historial.append(
         EventoTracking(trackingId="TRK-TEST01", estado_actual=EstadoEnvio.INICIADO, ubicacion="Buenos Aires")
@@ -25,6 +26,7 @@ def _seed_con_tracking(tracking_id: str, origen: str, destino: str, nombre: str,
         origen=origen,
         destino=destino,
         remitente=Cliente(dni="99999999", nombre=nombre),
+        destinatario=Cliente(dni="00000000", nombre="Destinatario Test"),
     )
     e.historial.append(
         EventoTracking(
@@ -71,7 +73,8 @@ def test_registrar_envio_genera_tracking_id(client):
     payload = {
         "origen": "Buenos Aires",
         "destino": "Cordoba",
-        "remitente": {"dni": "99999999", "nombre": "Test User"}
+        "remitente": {"dni": "99999999", "nombre": "Test User"},
+        "destinatario": {"dni": "11111111", "nombre": "Test Dest"}
     }
     response = client.post("/api/envios/", json=payload)
     assert response.status_code == 201
@@ -376,8 +379,7 @@ def test_historial_envio_retorna_lista(client):
 
 def test_historial_envio_inexistente_retorna_404(client):
     response = client.get("/api/envios/TRK-INVALIDO/historial_estado")
-    assert response.status_code == 404
-    
+    assert response.status_code == 404    
 
 # --- US-22: Anonimización de datos (Derecho al Olvido) ---
 def test_anonimizar_envio_finalizado_reemplaza_datos_personales(client):

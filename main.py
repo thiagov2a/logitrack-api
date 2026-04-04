@@ -1,11 +1,12 @@
 from fastapi import FastAPI
-from src.routers import envios, views
+from src.routers import envios, views, auth
 import uvicorn
 
 app = FastAPI(
     title="LogiTrack API", description="Mock API para el TP (Sprint 2)", version="2.0.0"
 )
 
+app.include_router(auth.router)
 app.include_router(views.router)
 app.include_router(envios.router)
 
