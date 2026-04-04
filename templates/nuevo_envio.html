@@ -27,12 +27,22 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Origen <span class="text-red-400">*</span></label>
-                        <input type="text" name="origen" required placeholder="Ej: Buenos Aires"
+                        <input
+                            type="text"
+                            name="origen"
+                            required
+                            placeholder="Ej: Buenos Aires"
+                            value="{{ form_data.origen if form_data else '' }}"
                             class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Destino <span class="text-red-400">*</span></label>
-                        <input type="text" name="destino" required placeholder="Ej: Córdoba"
+                        <input
+                            type="text"
+                            name="destino"
+                            required
+                            placeholder="Ej: Córdoba"
+                            value="{{ form_data.destino if form_data else '' }}"
                             class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50">
                     </div>
                 </div>
@@ -44,12 +54,21 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">DNI <span class="text-red-400">*</span></label>
-                        <input type="text" name="remitente_dni" required placeholder="Ej: 12345678"
+                        <input
+                            type="text"
+                            name="remitente_dni"
+                            required
+                            placeholder="Ej: 12345678"
+                            value="{{ form_data.remitente_dni if form_data else '' }}"
                             class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                        <input type="text" name="remitente_nombre" placeholder="Ej: Juan Pérez"
+                        <input
+                            type="text"
+                            name="remitente_nombre"
+                            placeholder="Ej: Juan Pérez"
+                            value="{{ form_data.remitente_nombre if form_data else '' }}"
                             class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50">
                     </div>
                 </div>
@@ -62,12 +81,20 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">DNI</label>
-                        <input type="text" name="destinatario_dni" placeholder="Ej: 87654321"
+                        <input
+                            type="text"
+                            name="destinatario_dni"
+                            placeholder="Ej: 87654321"
+                            value="{{ form_data.destinatario_dni if form_data else '' }}"
                             class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-                        <input type="text" name="destinatario_nombre" placeholder="Ej: María López"
+                        <input
+                            type="text"
+                            name="destinatario_nombre"
+                            placeholder="Ej: María López"
+                            value="{{ form_data.destinatario_nombre if form_data else '' }}"
                             class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50">
                     </div>
                 </div>
@@ -76,13 +103,20 @@
             <!-- Consentimiento -->
             <div class="border-t border-gray-100 pt-5">
                 <label class="flex items-start gap-3 cursor-pointer">
-                    <input type="checkbox" name="consentimiento" id="consentimiento" checked
+                    <input
+                        type="checkbox"
+                        name="consentimiento"
+                        id="consentimiento"
+                        {% if form_data and form_data.consentimiento == "on" %}checked{% endif %}
                         class="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-400">
                     <span class="text-sm text-gray-600">
                         Acepto el tratamiento de datos personales conforme a la
                         <span class="text-blue-600 font-medium">Ley 25.326</span> de Protección de Datos Personales.
                     </span>
                 </label>
+                <p class="text-xs text-gray-400 mt-2">
+                    Debe aceptar las politicas de privacidad para registrar el envío.
+                </p>
             </div>
 
             <button type="submit"

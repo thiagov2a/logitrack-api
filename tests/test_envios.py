@@ -235,6 +235,66 @@ def test_detalle_envio_incluye_destinatario(client):
 
 # --- US-16/18/20: Avanzar estado (eliminado, consolidado en /estado) ---
 
+# --- US-21: Consentimiento / Políticas de privacidad ---
+def test_crear_envio_form_sin_consentimiento_muestra_error_y_no_registra(client):
+    cantidad_antes = len(envios_module.mock_db_envios)
+
+    response = client.post(
+        "/envios/nuevo",
+        data={
+            "origen": "Buenos Aires",
+            "destino": "Cordoba",
+            "remitente_dni": "12345678",
+            "remitente_nombre": "Ana Gomez",
+            "destinatario_dni": "87654321",
+            "destinatario_nombre": "Luis Perez",
+            "rol": "operador"
+        }
+    )
+
+    assert response.status_code == 200
+    assert "Debe aceptar las politicas de privacidad para registrar el envío." in response.text
+    assert len(envios_module.mock_db_envios) == cantidad_antes
+
+
+def test_crear_envio_form_con_consentimiento_registra_envio(client):
+    cantidad_antes = len(envios_module.mock_db_envios)
+
+    response = client.post(
+        "/envios/nuevo",
+        data={
+            "origen": "Buenos Aires",
+            "destino": "Cordoba",
+            "remitente_dni": "12345678",
+            "remitente_nombre": "Ana Gomez",
+            "destinatario_dni": "87654321",
+            "destinatario_nombre": "Luis Perez",
+            "consentimiento": "on",
+            "rol": "operador"
+        },
+        follow_redirects=False
+    )
+
+    assert response.status_code == 303
+    assert len(envios_module.mock_db_envios) == cantidad_antes + 1
+    assert envios_module.mock_db_envios[-1].consentimiento is True
+
+
+def test_registrar_envio_sin_consentimiento_retorna_400(client):
+    payload = {
+        "origen": "Buenos Aires",
+        "destino": "Cordoba",
+        "consentimiento": False,
+        "remitente": {
+            "dni": "99999999",
+            "nombre": "Test User"
+        }
+    }
+
+    response = client.post("/api/envios/", json=payload)
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Debe aceptar las politicas de privacidad para registrar el envío."
 
 # --- US-17: Cambio de estado masivo ---
 def test_cambio_estado_masivo_supervisor_actualiza_solo_seleccionados(client):

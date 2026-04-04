@@ -149,6 +149,12 @@ mock_db_envios = [
 @router.post("/", status_code=201)
 def registrar_envio(nuevo_envio: Envio):
     """US-07: Registro individual de envio con Tracking ID autogenerado."""
+    if not getattr(nuevo_envio, "consentimiento", False):
+        raise HTTPException(
+            status_code=400,
+            detail="Debe aceptar las politicas de privacidad para registrar el envío."
+        )
+
     nuevo_envio.trackingId = f"TRK-{uuid.uuid4().hex[:8].upper()}"
     nuevo_envio.historial.append(EventoTracking(
         trackingId=nuevo_envio.trackingId,

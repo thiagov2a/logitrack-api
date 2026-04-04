@@ -72,7 +72,13 @@ def vista_listado(
 
 @router.get("/envios/nuevo", response_class=HTMLResponse)
 def vista_nuevo_envio(request: Request, rol: Optional[str] = None):
-    return _render("nuevo_envio.html", request, error=None, rol=rol)
+    return _render(
+        "nuevo_envio.html",
+        request,
+        error=None,
+        rol=rol,
+        form_data={}
+    )
 
 
 @router.post("/envios/nuevo")
@@ -87,6 +93,23 @@ def crear_envio_form(
     consentimiento: Optional[str] = Form(None),
     rol: Optional[str] = Form(None),
 ):
+    if consentimiento != "on":
+        return _render(
+            "nuevo_envio.html",
+            request,
+            error="Debe aceptar las politicas de privacidad para registrar el envío",
+            rol=rol,
+            form_data={
+                "origen": origen,
+                "destino": destino,
+                "remitente_dni": remitente_dni,
+                "remitente_nombre": remitente_nombre,
+                "destinatario_dni": destinatario_dni,
+                "destinatario_nombre": destinatario_nombre,
+                "consentimiento": consentimiento,
+            }
+        )
+
     destinatario = None
     if destinatario_dni:
         destinatario = Cliente(dni=destinatario_dni, nombre=destinatario_nombre)
@@ -95,7 +118,7 @@ def crear_envio_form(
         trackingId=f"TRK-{uuid.uuid4().hex[:8].upper()}",
         origen=origen,
         destino=destino,
-        consentimiento=consentimiento == "on",
+        consentimiento=True,
         remitente=Cliente(dni=remitente_dni, nombre=remitente_nombre),
         destinatario=destinatario,
     )
