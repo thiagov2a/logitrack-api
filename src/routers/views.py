@@ -142,6 +142,7 @@ def vista_detalle(request: Request, tracking_id: str):
     return _render("detalle.html", request, envio=envio, rol=usuario.rol, usuario=usuario)
 
 
+# --- Cambio individual de estado desde HTML ---
 @router.post("/envios/{tracking_id}/estado")
 def cambiar_estado_form(
     tracking_id: str,
@@ -172,6 +173,7 @@ def cambiar_estado_form(
     return RedirectResponse(url=f"/envios/{tracking_id}", status_code=303)
 
 
+# --- Cambio masivo de estado desde HTML ---
 @router.post("/envios/cambio-masivo")
 async def cambiar_estado_masivo_form(
     request: Request,
@@ -232,3 +234,52 @@ async def cambiar_estado_masivo_form(
         params_finales["error"] = "No se realizaron cambios porque los envios seleccionados estan en estado terminal."
 
     return RedirectResponse(url=f"/?{urlencode(params_finales)}", status_code=303)
+
+# --- US-22: Anonimización desde HTML ---
+@router.post("/envios/{tracking_id}/anonimizar")
+def anonimizar_envio_form(
+    tracking_id: str,
+    confirmar: Optional[str] = Form(None),
+    rol: str = Form(...),
+):
+    if (rol or "").lower() != "supervisor":
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?rol={rol}&error=Acceso denegado: solo el Supervisor puede anonimizar.",
+            status_code=303
+        )
+
+    if confirmar != "on":
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?rol={rol}&error=Debe confirmar la anonimización.",
+            status_code=303
+        )
+
+    envio = _buscar_envio(tracking_id)
+    estado_actual = _estado_actual(envio)
+
+    if estado_actual not in [EstadoEnvio.ENTREGADO, EstadoEnvio.CANCELADO]:
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?rol={rol}&error=Solo se puede anonimizar un envío finalizado.",
+            status_code=303
+        )
+
+    if envio.remitente:
+        envio.remitente.nombre = "***"
+        envio.remitente.dni = "***"
+        if hasattr(envio.remitente, "direccion"):
+            envio.remitente.direccion = "***"
+        if hasattr(envio.remitente, "anonimizado"):
+            envio.remitente.anonimizado = True
+
+    if getattr(envio, "destinatario", None):
+        envio.destinatario.nombre = "***"
+        envio.destinatario.dni = "***"
+        if hasattr(envio.destinatario, "direccion"):
+            envio.destinatario.direccion = "***"
+        if hasattr(envio.destinatario, "anonimizado"):
+            envio.destinatario.anonimizado = True
+
+    return RedirectResponse(
+        url=f"/envios/{tracking_id}?rol={rol}&success=Datos personales anonimizados correctamente.",
+        status_code=303
+    )
