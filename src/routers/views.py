@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Request, Form, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Request, Form, HTTPException, Query
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 from urllib.parse import urlencode
@@ -9,6 +9,8 @@ from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
 from src.models.enums import EstadoEnvio
 import uuid
+import io
+import csv
 
 router = APIRouter(tags=["Vistas"])
 templates = Jinja2Templates(directory="templates")
@@ -299,4 +301,65 @@ def anonimizar_envio_form(
     return RedirectResponse(
         url=f"/envios/{tracking_id}?rol={rol}&success=Datos personales anonimizados correctamente.",
         status_code=303
+    )
+
+
+# --- US-23: Exportación CSV desde HTML ---
+@router.get("/envios/{tracking_id}/exportar-cliente")
+def exportar_cliente_form(
+    tracking_id: str,
+    tipo_cliente: str = Query(...),
+    rol: str = Query(...),
+):
+    if (rol or "").lower() != "supervisor":
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?rol={rol}&error=Acceso denegado: solo el Supervisor puede exportar datos.",
+            status_code=303
+        )
+
+    envio = _buscar_envio(tracking_id)
+
+    tipo_normalizado = (tipo_cliente or "").lower()
+    if tipo_normalizado not in ["remitente", "destinatario"]:
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?rol={rol}&error=Tipo de cliente inválido.",
+            status_code=303
+        )
+
+    cliente = envio.remitente if tipo_normalizado == "remitente" else envio.destinatario
+
+    if not cliente:
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?rol={rol}&error=El envío no tiene {tipo_normalizado} registrado.",
+            status_code=303
+        )
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow([
+        "tracking_id",
+        "tipo_cliente",
+        "nombre",
+        "dni",
+        "direccion",
+        "anonimizado"
+    ])
+
+    writer.writerow([
+        envio.trackingId,
+        tipo_normalizado,
+        getattr(cliente, "nombre", "") or "",
+        getattr(cliente, "dni", "") or "",
+        getattr(cliente, "direccion", "") or "",
+        getattr(cliente, "anonimizado", False),
+    ])
+
+    output.seek(0)
+    filename = f"{tracking_id}_{tipo_normalizado}.csv"
+
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )

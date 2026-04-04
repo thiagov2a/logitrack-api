@@ -179,6 +179,34 @@
         </div>
         {% endif %}
 
+        <!-- Panel Supervisor — Derecho de Acceso -->
+        {% if es_supervisor %}
+        <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
+            <h2 class="text-sm font-semibold text-blue-800 uppercase tracking-wider mb-4">📄 Panel Supervisor — Derecho de Acceso</h2>
+            <p class="text-sm text-blue-700 mb-4">
+                Podés exportar un archivo CSV con los datos personales almacenados de un cliente en particular.
+            </p>
+
+            <div class="flex flex-wrap gap-3">
+                <a href="/envios/{{ envio.trackingId }}/exportar-cliente?tipo_cliente=remitente&rol=supervisor"
+                   class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                    Descargar CSV del remitente
+                </a>
+
+                {% if envio.destinatario %}
+                <a href="/envios/{{ envio.trackingId }}/exportar-cliente?tipo_cliente=destinatario&rol=supervisor"
+                   class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                    Descargar CSV del destinatario
+                </a>
+                {% else %}
+                <span class="bg-gray-100 text-gray-400 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed">
+                    Destinatario no disponible
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
     </div>
 
     <!-- Timeline -->

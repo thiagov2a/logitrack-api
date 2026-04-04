@@ -365,7 +365,74 @@ def test_cambio_masivo_omite_envio_entregado(client):
     assert data["omitidos"][0]["trackingId"] == "TRK-TEST02"
     assert "estado terminal" in data["omitidos"][0]["motivo"]
 
+# --- US-23: Exportación de datos de cliente (Derecho de Acceso) ---
+def test_exportar_datos_remitente_csv_como_supervisor(client):
+    response = client.get(
+        "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=remitente",
+        headers={"x-rol": "supervisor"}
+    )
 
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert "attachment; filename=" in response.headers["content-disposition"]
+
+    body = response.text
+    assert "tracking_id,tipo_cliente,nombre,dni,direccion,anonimizado" in body
+    assert "TRK-TEST01,remitente,Ana,12345678" in body
+
+
+def test_exportar_datos_destinatario_csv_como_supervisor(client):
+    envios_module.mock_db_envios[0].destinatario = Cliente(dni="87654321", nombre="Luis")
+
+    response = client.get(
+        "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=destinatario",
+        headers={"x-rol": "supervisor"}
+    )
+
+    assert response.status_code == 200
+    body = response.text
+    assert "TRK-TEST01,destinatario,Luis,87654321" in body
+
+
+def test_exportar_datos_cliente_con_rol_invalido_retorna_403(client):
+    response = client.get(
+        "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=remitente",
+        headers={"x-rol": "operador"}
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Acceso denegado: se requiere rol Supervisor."
+
+
+def test_exportar_datos_cliente_inexistente_retorna_404(client):
+    response = client.get(
+        "/api/envios/TRK-INVALIDO/exportar-cliente?tipo_cliente=remitente",
+        headers={"x-rol": "supervisor"}
+    )
+
+    assert response.status_code == 404
+
+
+def test_exportar_datos_destinatario_inexistente_retorna_404(client):
+    response = client.get(
+        "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=destinatario",
+        headers={"x-rol": "supervisor"}
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "El envio no tiene destinatario registrado."
+
+
+def test_exportar_datos_cliente_con_tipo_invalido_retorna_400(client):
+    response = client.get(
+        "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=cliente",
+        headers={"x-rol": "supervisor"}
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "tipo_cliente debe ser 'remitente' o 'destinatario'."
+    
+    
 # --- US-19: Historial de estados ---
 def test_historial_envio_retorna_lista(client):
     response = client.get("/api/envios/TRK-TEST01/historial_estado")

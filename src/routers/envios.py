@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Query, Header
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
@@ -7,6 +8,8 @@ from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
 from src.models.enums import EstadoEnvio
 import uuid
+import io
+import csv
 
 router = APIRouter(prefix="/api/envios", tags=["Envios"])
 
@@ -420,3 +423,66 @@ def anonimizar_envio(
         "trackingId": tracking_id,
         "envio": envio
     }
+
+
+# US-23: Exportación de datos de cliente (Derecho de Acceso)
+@router.get("/{tracking_id}/exportar-cliente")
+def exportar_datos_cliente(
+    tracking_id: str,
+    tipo_cliente: str = Query(..., description="remitente o destinatario"),
+    x_rol: str = Header(...)
+):
+    """US-23: Exporta en CSV los datos personales almacenados de un cliente. Solo Supervisor."""
+    if x_rol.lower() != "supervisor":
+        raise HTTPException(
+            status_code=403,
+            detail="Acceso denegado: se requiere rol Supervisor."
+        )
+
+    envio = _buscar_envio(tracking_id)
+
+    tipo_normalizado = tipo_cliente.lower()
+    if tipo_normalizado not in ["remitente", "destinatario"]:
+        raise HTTPException(
+            status_code=400,
+            detail="tipo_cliente debe ser 'remitente' o 'destinatario'."
+        )
+
+    cliente = envio.remitente if tipo_normalizado == "remitente" else envio.destinatario
+
+    if not cliente:
+        raise HTTPException(
+            status_code=404,
+            detail=f"El envio no tiene {tipo_normalizado} registrado."
+        )
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+
+    writer.writerow([
+        "tracking_id",
+        "tipo_cliente",
+        "nombre",
+        "dni",
+        "direccion",
+        "anonimizado"
+    ])
+
+    writer.writerow([
+        envio.trackingId,
+        tipo_normalizado,
+        getattr(cliente, "nombre", "") or "",
+        getattr(cliente, "dni", "") or "",
+        getattr(cliente, "direccion", "") or "",
+        getattr(cliente, "anonimizado", False),
+    ])
+
+    output.seek(0)
+
+    filename = f"{tracking_id}_{tipo_normalizado}.csv"
+
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
