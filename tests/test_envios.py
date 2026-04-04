@@ -379,7 +379,8 @@ def test_historial_envio_retorna_lista(client):
 
 def test_historial_envio_inexistente_retorna_404(client):
     response = client.get("/api/envios/TRK-INVALIDO/historial_estado")
-    assert response.status_code == 404    
+    assert response.status_code == 404
+
 
 # --- US-22: Anonimización de datos (Derecho al Olvido) ---
 def test_anonimizar_envio_finalizado_reemplaza_datos_personales(client):

@@ -235,6 +235,7 @@ async def cambiar_estado_masivo_form(
 
     return RedirectResponse(url=f"/?{urlencode(params_finales)}", status_code=303)
 
+
 # --- US-22: Anonimización desde HTML ---
 @router.post("/envios/{tracking_id}/anonimizar")
 def anonimizar_envio_form(
