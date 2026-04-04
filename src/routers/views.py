@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Request, Form, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi import APIRouter, Request, Form, HTTPException, Query
+from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 from urllib.parse import urlencode
@@ -10,6 +10,8 @@ from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
 from src.models.enums import EstadoEnvio
 import uuid
+import io
+import csv
 
 router = APIRouter(tags=["Vistas"])
 templates = Jinja2Templates(directory="templates")
@@ -240,47 +242,75 @@ async def cambiar_estado_masivo_form(
 @router.post("/envios/{tracking_id}/anonimizar")
 def anonimizar_envio_form(
     tracking_id: str,
+    request: Request,
     confirmar: Optional[str] = Form(None),
-    rol: str = Form(...),
 ):
-    if (rol or "").lower() != "supervisor":
-        return RedirectResponse(
-            url=f"/envios/{tracking_id}?rol={rol}&error=Acceso denegado: solo el Supervisor puede anonimizar.",
-            status_code=303
-        )
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "supervisor":
+        raise HTTPException(status_code=403, detail="Acceso denegado: solo el Supervisor puede anonimizar.")
 
     if confirmar != "on":
-        return RedirectResponse(
-            url=f"/envios/{tracking_id}?rol={rol}&error=Debe confirmar la anonimización.",
-            status_code=303
-        )
+        return RedirectResponse(url=f"/envios/{tracking_id}?error=Debe+confirmar+la+anonimizacion", status_code=303)
 
     envio = _buscar_envio(tracking_id)
     estado_actual = _estado_actual(envio)
 
-    if estado_actual not in [EstadoEnvio.ENTREGADO, EstadoEnvio.CANCELADO]:
+    if estado_actual not in ESTADOS_TERMINALES:
         return RedirectResponse(
-            url=f"/envios/{tracking_id}?rol={rol}&error=Solo se puede anonimizar un envío finalizado.",
-            status_code=303
+            url=f"/envios/{tracking_id}?error=Solo+se+puede+anonimizar+un+envio+finalizado", status_code=303
         )
 
     if envio.remitente:
         envio.remitente.nombre = "***"
         envio.remitente.dni = "***"
-        if hasattr(envio.remitente, "direccion"):
-            envio.remitente.direccion = "***"
-        if hasattr(envio.remitente, "anonimizado"):
-            envio.remitente.anonimizado = True
+        envio.remitente.anonimizado = True
 
-    if getattr(envio, "destinatario", None):
+    if envio.destinatario:
         envio.destinatario.nombre = "***"
         envio.destinatario.dni = "***"
-        if hasattr(envio.destinatario, "direccion"):
-            envio.destinatario.direccion = "***"
-        if hasattr(envio.destinatario, "anonimizado"):
-            envio.destinatario.anonimizado = True
+        envio.destinatario.anonimizado = True
 
-    return RedirectResponse(
-        url=f"/envios/{tracking_id}?rol={rol}&success=Datos personales anonimizados correctamente.",
-        status_code=303
+    return RedirectResponse(url=f"/envios/{tracking_id}?success=Datos+anonimizados+correctamente", status_code=303)
+
+
+# --- US-23: Exportación CSV desde HTML ---
+@router.get("/envios/{tracking_id}/exportar-cliente")
+def exportar_cliente_form(
+    tracking_id: str,
+    request: Request,
+    tipo_cliente: str = Query(...),
+):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "supervisor":
+        raise HTTPException(status_code=403, detail="Acceso denegado: solo el Supervisor puede exportar datos.")
+
+    envio = _buscar_envio(tracking_id)
+
+    tipo_normalizado = (tipo_cliente or "").lower()
+    if tipo_normalizado not in ["remitente", "destinatario"]:
+        raise HTTPException(status_code=400, detail="Tipo de cliente inválido.")
+
+    cliente = envio.remitente if tipo_normalizado == "remitente" else envio.destinatario
+
+    if not cliente:
+        raise HTTPException(status_code=404, detail=f"El envío no tiene {tipo_normalizado} registrado.")
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["tracking_id", "tipo_cliente", "nombre", "dni", "anonimizado"])
+    writer.writerow([
+        envio.trackingId,
+        tipo_normalizado,
+        getattr(cliente, "nombre", "") or "",
+        getattr(cliente, "dni", "") or "",
+        getattr(cliente, "anonimizado", False),
+    ])
+
+    output.seek(0)
+    filename = f"{tracking_id}_{tipo_normalizado}.csv"
+
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )

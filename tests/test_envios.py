@@ -238,6 +238,66 @@ def test_detalle_envio_incluye_destinatario(client):
 
 # --- US-16/18/20: Avanzar estado (eliminado, consolidado en /estado) ---
 
+# --- US-21: Consentimiento / Políticas de privacidad ---
+def test_crear_envio_form_sin_consentimiento_muestra_error_y_no_registra(client):
+    cantidad_antes = len(envios_module.mock_db_envios)
+
+    response = client.post(
+        "/envios/nuevo",
+        data={
+            "origen": "Buenos Aires",
+            "destino": "Cordoba",
+            "remitente_dni": "12345678",
+            "remitente_nombre": "Ana Gomez",
+            "destinatario_dni": "87654321",
+            "destinatario_nombre": "Luis Perez",
+            "rol": "operador"
+        }
+    )
+
+    assert response.status_code == 200
+    assert "Debe aceptar las politicas de privacidad para registrar el envío." in response.text
+    assert len(envios_module.mock_db_envios) == cantidad_antes
+
+
+def test_crear_envio_form_con_consentimiento_registra_envio(client):
+    cantidad_antes = len(envios_module.mock_db_envios)
+
+    response = client.post(
+        "/envios/nuevo",
+        data={
+            "origen": "Buenos Aires",
+            "destino": "Cordoba",
+            "remitente_dni": "12345678",
+            "remitente_nombre": "Ana Gomez",
+            "destinatario_dni": "87654321",
+            "destinatario_nombre": "Luis Perez",
+            "consentimiento": "on",
+            "rol": "operador"
+        },
+        follow_redirects=False
+    )
+
+    assert response.status_code == 303
+    assert len(envios_module.mock_db_envios) == cantidad_antes + 1
+    assert envios_module.mock_db_envios[-1].consentimiento is True
+
+
+def test_registrar_envio_sin_consentimiento_retorna_400(client):
+    payload = {
+        "origen": "Buenos Aires",
+        "destino": "Cordoba",
+        "consentimiento": False,
+        "remitente": {
+            "dni": "99999999",
+            "nombre": "Test User"
+        }
+    }
+
+    response = client.post("/api/envios/", json=payload)
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Debe aceptar las politicas de privacidad para registrar el envío."
 
 # --- US-17: Cambio de estado masivo ---
 def test_cambio_estado_masivo_supervisor_actualiza_solo_seleccionados(client):
@@ -368,7 +428,74 @@ def test_cambio_masivo_omite_envio_entregado(client):
     assert data["omitidos"][0]["trackingId"] == "TRK-TEST02"
     assert "estado terminal" in data["omitidos"][0]["motivo"]
 
+# --- US-23: Exportación de datos de cliente (Derecho de Acceso) ---
+def test_exportar_datos_remitente_csv_como_supervisor(client):
+    response = client.get(
+        "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=remitente",
+        headers={"x-rol": "supervisor"}
+    )
 
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert "attachment; filename=" in response.headers["content-disposition"]
+
+    body = response.text
+    assert "tracking_id,tipo_cliente,nombre,dni,direccion,anonimizado" in body
+    assert "TRK-TEST01,remitente,Ana,12345678" in body
+
+
+def test_exportar_datos_destinatario_csv_como_supervisor(client):
+    envios_module.mock_db_envios[0].destinatario = Cliente(dni="87654321", nombre="Luis")
+
+    response = client.get(
+        "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=destinatario",
+        headers={"x-rol": "supervisor"}
+    )
+
+    assert response.status_code == 200
+    body = response.text
+    assert "TRK-TEST01,destinatario,Luis,87654321" in body
+
+
+def test_exportar_datos_cliente_con_rol_invalido_retorna_403(client):
+    response = client.get(
+        "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=remitente",
+        headers={"x-rol": "operador"}
+    )
+
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Acceso denegado: se requiere rol Supervisor."
+
+
+def test_exportar_datos_cliente_inexistente_retorna_404(client):
+    response = client.get(
+        "/api/envios/TRK-INVALIDO/exportar-cliente?tipo_cliente=remitente",
+        headers={"x-rol": "supervisor"}
+    )
+
+    assert response.status_code == 404
+
+
+def test_exportar_datos_destinatario_inexistente_retorna_404(client):
+    response = client.get(
+        "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=destinatario",
+        headers={"x-rol": "supervisor"}
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "El envio no tiene destinatario registrado."
+
+
+def test_exportar_datos_cliente_con_tipo_invalido_retorna_400(client):
+    response = client.get(
+        "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=cliente",
+        headers={"x-rol": "supervisor"}
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "tipo_cliente debe ser 'remitente' o 'destinatario'."
+    
+    
 # --- US-19: Historial de estados ---
 def test_historial_envio_retorna_lista(client):
     response = client.get("/api/envios/TRK-TEST01/historial_estado")
