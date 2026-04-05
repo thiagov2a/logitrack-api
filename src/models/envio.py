@@ -4,6 +4,7 @@ from typing import Optional, List
 from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
 from src.models.enums import PrioridadEnvio
+import re
 
 
 class Dimensiones(BaseModel):

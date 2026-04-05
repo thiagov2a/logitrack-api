@@ -22,14 +22,24 @@ uvicorn main:app --reload
 
 ```
 src/
+├── ml/           # Módulo de Machine Learning
+│   ├── predictor.py      → Predicción de prioridad (Random Forest)
+│   ├── modelo_prioridad.pkl → Modelo serializado
+│   └── imputer.pkl       → Imputer serializado
 ├── models/       # Entidades de dominio (Pydantic)
-│   ├── envio.py      → Modelo principal con historial
+│   ├── envio.py      → Modelo principal con historial y prioridad ML
 │   ├── cliente.py    → Remitente / Destinatario
 │   ├── tracking.py   → Evento de tracking
-│   └── enums.py      → EstadoEnvio, PrioridadEnvio
+│   ├── enums.py      → EstadoEnvio, PrioridadEnvio
+│   └── usuario.py    → Usuario del sistema
 └── routers/
+    ├── auth.py       → Login / Logout (sesión por cookie)
     ├── envios.py     → API REST (/api/envios/*)
     └── views.py      → Vistas HTML (/, /envios/*)
+
+analysis/
+├── dataset_envios_ml.csv  → Dataset de entrenamiento
+└── entrenar_modelo.py     → Script que genera los .pkl en src/ml/
 ```
 
 La API REST y las vistas HTML comparten la misma `mock_db_envios` en memoria. En futuras iteraciones se reemplazará por una base de datos PostgreSQL.

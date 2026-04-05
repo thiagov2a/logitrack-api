@@ -6,7 +6,7 @@
 ![CI](https://github.com/thiagov2a/logitrack-api/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.135-green)
-![Tests](https://img.shields.io/badge/Tests-22%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-42%20passed-brightgreen)
 ![Linter](https://img.shields.io/badge/Linter-Flake8-yellow)
 [![Deploy](https://img.shields.io/badge/Deploy-Render-46E3B7)](https://logitrack-api-6nj5.onrender.com/)
 
@@ -14,7 +14,7 @@
 
 ## Descripción
 
-LogiTrack es el **Paquete Base** del Sistema Federal de Gestión de Logística y Distribución (SFGLD). En esta iteración (Sprint 2) se desarrolló una Mock API REST con interfaz web que simula el registro, seguimiento y cambio de estados de envíos logísticos. En futuras etapas se integrará un modelo de Machine Learning para predecir la prioridad de los envíos y una base de datos PostgreSQL.
+LogiTrack es el **Paquete Base** del Sistema Federal de Gestión de Logística y Distribución (SFGLD). En esta iteración (Sprint 3) se desarrolló una Mock API REST con interfaz web que simula el registro, seguimiento y cambio de estados de envíos logísticos, con autenticación por sesión, roles diferenciados y un modelo de Machine Learning para predecir la prioridad de los envíos.
 
 ## Stack Tecnológico
 
@@ -26,6 +26,8 @@ LogiTrack es el **Paquete Base** del Sistema Federal de Gestión de Logística y
 | Pydantic | 2.x | Modelado y validación de datos |
 | Jinja2 | 3.x | Templates HTML |
 | Tailwind CSS | CDN | Estilos de la interfaz web |
+| scikit-learn | — | Modelo de ML (Random Forest) |
+| pandas | — | Procesamiento de datos para ML |
 | Pytest + HTTPX | — | Testing automatizado |
 | Flake8 | — | Linter |
 | GitHub Actions | — | Pipeline CI/CD |
@@ -36,30 +38,40 @@ LogiTrack es el **Paquete Base** del Sistema Federal de Gestión de Logística y
 /
 ├── .github/
 │   └── workflows/
-│       └── ci.yml          # Pipeline de CI (linter + tests)
+│       └── ci.yml              # Pipeline de CI (linter + tests)
+├── analysis/
+│   ├── dataset_envios_ml.csv   # Dataset de entrenamiento
+│   ├── entrenar_modelo.py      # Script de entrenamiento
+│   ├── imputer.pkl             # Imputer serializado
+│   └── modelo_prioridad.pkl    # Modelo Random Forest serializado
 ├── docs/
-│   ├── TRAZABILIDAD.md     # Matriz Historia ↔ Test ↔ Commit
-│   ├── ADRs.md             # Decisiones de arquitectura
-│   └── NFRs.md             # Atributos de calidad
+│   ├── TRAZABILIDAD.md         # Matriz Historia ↔ Test ↔ Commit
+│   ├── ADRs.md                 # Decisiones de arquitectura
+│   └── NFRs.md                 # Atributos de calidad
 ├── src/
-│   ├── models/             # Entidades de dominio
+│   ├── ml/
+│   │   └── predictor.py        # Módulo de predicción de prioridad
+│   ├── models/
 │   │   ├── envio.py
 │   │   ├── cliente.py
 │   │   ├── tracking.py
-│   │   └── enums.py
-│   └── routers/            # Endpoints y vistas
-│       ├── envios.py       # API REST
-│       └── views.py        # Vistas HTML
-├── templates/              # Templates Jinja2
+│   │   ├── enums.py
+│   │   └── usuario.py
+│   └── routers/
+│       ├── auth.py             # Login / Logout
+│       ├── envios.py           # API REST
+│       └── views.py            # Vistas HTML
+├── templates/
 │   ├── base.html
+│   ├── login.html
 │   ├── envios.html
 │   ├── detalle.html
 │   └── nuevo_envio.html
 ├── tests/
-│   └── test_envios.py      # 22 tests automatizados
-├── main.py                 # Punto de entrada
-├── CONTRIBUTING.md         # Guía de contribución
-└── requirements.txt        # Dependencias
+│   └── test_envios.py          # 42 tests automatizados
+├── main.py                     # Punto de entrada
+├── CONTRIBUTING.md             # Guía de contribución
+└── requirements.txt            # Dependencias
 ```
 
 ## Instalación y ejecución
@@ -76,16 +88,17 @@ uvicorn main:app --reload
 
 | URL | Descripción |
 |---|---|
-| `http://127.0.0.1:8000` | Interfaz web |
+| `http://127.0.0.1:8000` | Interfaz web (redirige al login) |
 | `http://127.0.0.1:8000/docs` | Swagger / OpenAPI |
 | `http://127.0.0.1:8000/redoc` | ReDoc |
 
-## Interfaz Web
+## Usuarios de prueba
 
-La aplicación incluye una interfaz web con selector de rol simulado:
-
-- `http://127.0.0.1:8000/?rol=operador` — Vista de Operador
-- `http://127.0.0.1:8000/?rol=supervisor` — Vista de Supervisor (incluye panel de cambio de estado)
+| Email | Contraseña | Rol |
+|---|---|---|
+| `operador@logitrack.com` | `operador123` | Operador |
+| `supervisor@logitrack.com` | `supervisor123` | Supervisor |
+| `admin@logitrack.com` | `admin123` | Administrador |
 
 ## API REST — Endpoints
 
@@ -96,25 +109,20 @@ La aplicación incluye una interfaz web con selector de rol simulado:
 | `GET` | `/api/envios/{tracking_id}` | Buscar envío por Tracking ID | Ambos | US-12 |
 | `GET` | `/api/envios/{tracking_id}/detalles` | Detalle completo con historial | Ambos | US-13 |
 | `GET` | `/api/envios/{tracking_id}/historial_estado` | Historial de estados | Ambos | US-19 |
+| `GET` | `/api/envios/{tracking_id}/exportar-cliente` | Exportar datos de cliente (CSV) | Supervisor | US-23 |
 | `PATCH` | `/api/envios/{tracking_id}` | Editar datos en estado INICIADO | Operador | US-09 |
 | `PATCH` | `/api/envios/{tracking_id}/cancelar` | Cancelar envío en estado INICIADO | Operador | US-10 |
 | `PATCH` | `/api/envios/{tracking_id}/estado` | Cambiar estado | Supervisor | US-08/16/18/20 |
-
-### Filtros disponibles en `GET /api/envios/`
-
-```
-?estados=INICIADO
-?estados=INICIADO&estados=EN_SUCURSAL
-?fecha_desde=2026-01-01T00:00:00
-?fecha_hasta=2026-12-31T23:59:59
-```
+| `PATCH` | `/api/envios/estado-masivo` | Cambio de estado masivo | Supervisor | US-17 |
+| `PATCH` | `/api/envios/{tracking_id}/anonimizar` | Anonimizar datos personales | Supervisor | US-22 |
 
 ## Roles
 
-| Rol | Header API | Permisos |
-|---|---|---|
-| Operador | `X-Rol: operador` | Registrar, listar, buscar, editar, cancelar |
-| Supervisor | `X-Rol: supervisor` | Todo lo anterior + cambiar estado |
+| Rol | Permisos |
+|---|---|
+| Operador | Registrar, listar, buscar, editar, cancelar |
+| Supervisor | Todo lo anterior + cambiar estado, cambio masivo, anonimizar, exportar |
+| Administrador | Gestión de usuarios (próximamente) |
 
 ## Estados del envío
 
@@ -124,27 +132,9 @@ INICIADO → EN_SUCURSAL → EN_TRANSITO → ENTREGADO
                                   CANCELADO (solo desde INICIADO)
 ```
 
-## Ejemplo de uso
+## Machine Learning
 
-**Registrar un envío:**
-```bash
-curl -X POST http://127.0.0.1:8000/api/envios/ \
-  -H "Content-Type: application/json" \
-  -d '{
-    "origen": "Buenos Aires",
-    "destino": "Córdoba",
-    "remitente": {"dni": "12345678", "nombre": "Juan Pérez"},
-    "destinatario": {"dni": "87654321", "nombre": "María López"}
-  }'
-```
-
-**Cambiar estado (Supervisor):**
-```bash
-curl -X PATCH http://127.0.0.1:8000/api/envios/TRK-XXXXXXXX/estado \
-  -H "Content-Type: application/json" \
-  -H "X-Rol: supervisor" \
-  -d '{"nuevo_estado": "EN_TRANSITO", "ubicacion": "Córdoba", "observaciones": "En camino"}'
-```
+El modelo Random Forest predice automáticamente la prioridad del envío (ALTA/MEDIA/BAJA) al registrarlo, basándose en peso y dimensiones del paquete.
 
 ## Tests
 
@@ -152,7 +142,7 @@ curl -X PATCH http://127.0.0.1:8000/api/envios/TRK-XXXXXXXX/estado \
 pytest tests/ -v
 ```
 
-22 tests automatizados cubriendo todas las historias de usuario implementadas. Ver `docs/TRAZABILIDAD.md` para el detalle completo.
+42 tests automatizados cubriendo todas las historias de usuario implementadas.
 
 ## Documentación adicional
 
