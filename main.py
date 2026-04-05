@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from src.routers import envios, views, auth
+from src.routers import envios, views, auth, usuarios
 import uvicorn
 
 app = FastAPI(
@@ -8,6 +8,7 @@ app = FastAPI(
 
 app.include_router(auth.router)
 app.include_router(views.router)
+app.include_router(usuarios.router)
 app.include_router(envios.router)
 
 
