@@ -160,15 +160,14 @@
             </p>
 
             <form method="post" action="/envios/{{ envio.trackingId }}/anonimizar" class="space-y-4">
-                <input type="hidden" name="rol" value="supervisor">
 
                 <label class="flex items-center gap-2 text-sm text-gray-700">
                     <input type="checkbox" name="confirmar" class="rounded border-red-300 text-red-600 focus:ring-red-400">
                     Confirmo que deseo anonimizar irreversiblemente los datos personales del envío
                 </label>
 
-                <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition">
-                    Anonimizar datos personales
+                <button type="submit" class="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition">
+                    🛡️ Anonimizar datos personales
                 </button>
             </form>
             {% else %}
@@ -188,18 +187,18 @@
             </p>
 
             <div class="flex flex-wrap gap-3">
-                <a href="/envios/{{ envio.trackingId }}/exportar-cliente?tipo_cliente=remitente&rol=supervisor"
-                   class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
-                    Descargar CSV del remitente
+                <a href="/envios/{{ envio.trackingId }}/exportar-cliente?tipo_cliente=remitente"
+                   class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                    📅 Exportar remitente
                 </a>
 
                 {% if envio.destinatario %}
-                <a href="/envios/{{ envio.trackingId }}/exportar-cliente?tipo_cliente=destinatario&rol=supervisor"
-                   class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
-                    Descargar CSV del destinatario
+                <a href="/envios/{{ envio.trackingId }}/exportar-cliente?tipo_cliente=destinatario"
+                   class="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
+                    📅 Exportar destinatario
                 </a>
                 {% else %}
-                <span class="bg-gray-100 text-gray-400 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed">
+                <span class="inline-flex items-center gap-2 bg-gray-100 text-gray-400 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed">
                     Destinatario no disponible
                 </span>
                 {% endif %}
