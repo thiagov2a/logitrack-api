@@ -9,27 +9,27 @@
 <body class="bg-gray-50 min-h-screen flex flex-col">
 
     <nav class="bg-blue-700 text-white px-6 py-3 flex items-center justify-between shadow-md">
-        <a href="/?rol={{ rol or 'operador' }}" class="flex items-center gap-2 text-xl font-bold tracking-wide hover:opacity-90">
+        <a href="/" class="flex items-center gap-2 text-xl font-bold tracking-wide hover:opacity-90">
             📦 <span>LogiTrack</span>
         </a>
         <div class="flex items-center gap-3 text-sm">
-            <a href="/envios/nuevo?rol={{ rol or 'operador' }}"
+            <a href="/envios/nuevo"
                class="bg-white text-blue-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-50 transition">
                 + Nuevo envío
             </a>
-            <div class="flex items-center gap-1 bg-blue-800 rounded-lg px-3 py-1.5">
-                <span class="text-blue-300 text-xs mr-1">Rol:</span>
-                <a href="?rol=operador"
-                   class="text-xs px-2.5 py-1 rounded-md transition
-                   {% if rol == 'operador' or not rol %}bg-white text-blue-700 font-semibold shadow-sm{% else %}text-blue-200 hover:bg-blue-700{% endif %}">
-                    👤 Operador
-                </a>
-                <a href="?rol=supervisor"
-                   class="text-xs px-2.5 py-1 rounded-md transition
-                   {% if rol == 'supervisor' %}bg-white text-blue-700 font-semibold shadow-sm{% else %}text-blue-200 hover:bg-blue-700{% endif %}">
-                    🔑 Supervisor
-                </a>
+            {% if usuario %}
+            <div class="flex items-center gap-2 bg-blue-800 rounded-lg px-3 py-1.5">
+                <span class="text-blue-200 text-xs">
+                    {% if usuario.rol == 'operador' %}👤
+                    {% elif usuario.rol == 'supervisor' %}🔑
+                    {% else %}⚙️
+                    {% endif %}
+                </span>
+                <span class="text-white text-xs font-medium">{{ usuario.nombre }}</span>
+                <span class="text-blue-300 text-xs">({{ usuario.rol }})</span>
             </div>
+            <a href="/logout" class="text-xs text-blue-200 hover:text-white transition">Cerrar sesión</a>
+            {% endif %}
         </div>
     </nav>
 
