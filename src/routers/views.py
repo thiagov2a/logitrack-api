@@ -136,12 +136,133 @@ def crear_envio_form(
 
 
 @router.get("/envios/{tracking_id}", response_class=HTMLResponse)
-def vista_detalle(request: Request, tracking_id: str):
-    usuario = get_usuario_actual(request)
-    if not usuario:
-        return RedirectResponse(url="/login", status_code=303)
+def vista_detalle(
+    request: Request,
+    tracking_id: str,
+    rol: Optional[str] = None,
+    error: Optional[str] = None,
+    success: Optional[str] = None,
+):
     envio = _buscar_envio(tracking_id)
-    return _render("detalle.html", request, envio=envio, rol=usuario.rol, usuario=usuario)
+    estado_actual = _estado_actual(envio)
+
+    return _render(
+        "detalle.html",
+        request,
+        envio=envio,
+        rol=rol,
+        error=error,
+        success=success,
+        estado_actual=estado_actual,
+    )
+
+# --- US-09: Editar envío desde HTML (solo Operador y solo en estado INICIADO) ---
+@router.post("/envios/{tracking_id}/editar")
+def editar_envio_form(
+    tracking_id: str,
+    origen: str = Form(...),
+    destino: str = Form(...),
+    remitente_dni: str = Form(...),
+    remitente_nombre: Optional[str] = Form(None),
+    destinatario_dni: Optional[str] = Form(None),
+    destinatario_nombre: Optional[str] = Form(None),
+    consentimiento: Optional[str] = Form(None),
+    rol: str = Form(...),
+):
+    if (rol or "").lower() != "operador":
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?rol={rol}&error=Acceso denegado: solo el Operador puede editar el envío.",
+            status_code=303
+        )
+
+    envio = _buscar_envio(tracking_id)
+    estado_actual = _estado_actual(envio)
+
+    if estado_actual != EstadoEnvio.INICIADO:
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?rol={rol}&error=Solo se puede editar un envío en estado INICIADO.",
+            status_code=303
+        )
+
+    envio.origen = origen
+    envio.destino = destino
+    envio.consentimiento = consentimiento == "on"
+
+    if envio.remitente:
+        envio.remitente.dni = remitente_dni
+        envio.remitente.nombre = remitente_nombre
+    else:
+        envio.remitente = Cliente(dni=remitente_dni, nombre=remitente_nombre)
+
+    if destinatario_dni or destinatario_nombre:
+        if envio.destinatario:
+            envio.destinatario.dni = destinatario_dni
+            envio.destinatario.nombre = destinatario_nombre
+        else:
+            envio.destinatario = Cliente(dni=destinatario_dni, nombre=destinatario_nombre)
+    else:
+        envio.destinatario = None
+
+    return RedirectResponse(
+        url=f"/envios/{tracking_id}?rol={rol}&success=Datos del envío actualizados correctamente.",
+        status_code=303
+    )
+    
+# --- US-10: Cancelar envío desde HTML (solo Operador y solo en estado INICIADO) ---
+@router.post("/envios/{tracking_id}/cancelar")
+def cancelar_envio_form(
+    tracking_id: str,
+    confirmar: Optional[str] = Form(None),
+    rol: str = Form(...),
+):
+    if (rol or "").lower() != "operador":
+        params = {
+            "rol": rol,
+            "error": "Acceso denegado: solo el Operador puede cancelar el envío."
+        }
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?{urlencode(params)}",
+            status_code=303
+        )
+
+    envio = _buscar_envio(tracking_id)
+    estado_actual = _estado_actual(envio)
+
+    if confirmar != "on":
+        params = {
+            "rol": rol,
+            "error": "Debe confirmar la cancelación del envío."
+        }
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?{urlencode(params)}",
+            status_code=303
+        )
+
+    if estado_actual != EstadoEnvio.INICIADO:
+        params = {
+            "rol": rol,
+            "error": "Solo se puede cancelar un envío en estado INICIADO."
+        }
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?{urlencode(params)}",
+            status_code=303
+        )
+
+    envio.historial.append(EventoTracking(
+        trackingId=tracking_id,
+        estado_actual=EstadoEnvio.CANCELADO,
+        ubicacion=envio.origen,
+        observaciones="Envio cancelado por el Operador.",
+    ))
+
+    params = {
+        "rol": rol,
+        "success": "Envío cancelado correctamente."
+    }
+    return RedirectResponse(
+        url=f"/envios/{tracking_id}?{urlencode(params)}",
+        status_code=303
+    )
 
 
 # --- Cambio individual de estado desde HTML ---
