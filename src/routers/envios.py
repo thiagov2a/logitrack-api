@@ -6,7 +6,8 @@ from datetime import datetime
 from src.models.envio import Envio, Dimensiones
 from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
-from src.models.enums import EstadoEnvio
+from src.models.enums import EstadoEnvio, PrioridadEnvio
+from src.ml.predictor import predecir_prioridad
 import uuid
 import io
 import csv
@@ -146,7 +147,7 @@ mock_db_envios = [
 
 # --- Endpoints ---
 
-# US-07: Registrar envio
+# US-07/25: Registrar envio y asignarle una prioridad
 @router.post("/", status_code=201)
 def registrar_envio(nuevo_envio: Envio):
     """US-07: Registro individual de envio con Tracking ID autogenerado."""
@@ -157,6 +158,16 @@ def registrar_envio(nuevo_envio: Envio):
         )
 
     nuevo_envio.trackingId = f"TRK-{uuid.uuid4().hex[:8].upper()}"
+
+    dims = nuevo_envio.dimensiones
+    pred = predecir_prioridad(
+        peso_kg=nuevo_envio.peso_kg,
+        largo_cm=dims.largo_cm if dims else None,
+        ancho_cm=dims.ancho_cm if dims else None,
+        alto_cm=dims.alto_cm if dims else None,
+    )
+    nuevo_envio.prioridad_ml = PrioridadEnvio(pred)
+
     nuevo_envio.historial.append(EventoTracking(
         trackingId=nuevo_envio.trackingId,
         estado_actual=EstadoEnvio.INICIADO,
