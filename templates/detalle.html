@@ -29,17 +29,28 @@
     <a href="/" class="inline-flex items-center gap-1.5 text-sm text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 px-3 py-1.5 rounded-lg transition">
         ← Volver al listado
     </a>
-    {% if estado == "INICIADO" %}
-        <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full text-sm font-medium">{{ iconos[estado] }} {{ labels[estado] }}</span>
-    {% elif estado == "EN_SUCURSAL" %}
-        <span class="inline-flex items-center gap-1 bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-full text-sm font-medium">{{ iconos[estado] }} {{ labels[estado] }}</span>
-    {% elif estado == "EN_TRANSITO" %}
-        <span class="inline-flex items-center gap-1 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-full text-sm font-medium">{{ iconos[estado] }} {{ labels[estado] }}</span>
-    {% elif estado == "ENTREGADO" %}
-        <span class="inline-flex items-center gap-1 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-sm font-medium">{{ iconos[estado] }} {{ labels[estado] }}</span>
-    {% elif estado == "CANCELADO" %}
-        <span class="inline-flex items-center gap-1 bg-red-50 text-red-600 px-3 py-1.5 rounded-full text-sm font-medium">{{ iconos[estado] }} {{ labels[estado] }}</span>
-    {% endif %}
+    <div class="flex items-center gap-2">
+        {% set prioridad = envio.prioridad_ml | string if envio.prioridad_ml else None %}
+        {% set prioridad = prioridad.split('.')[-1] if prioridad else None %}
+        {% if prioridad == "ALTA" %}
+        <span class="inline-flex items-center gap-1 bg-red-50 text-red-600 px-2.5 py-1.5 rounded-full text-sm font-medium">🔴 Alta</span>
+        {% elif prioridad == "MEDIA" %}
+        <span class="inline-flex items-center gap-1 bg-yellow-50 text-yellow-700 px-2.5 py-1.5 rounded-full text-sm font-medium">🟡 Media</span>
+        {% elif prioridad == "BAJA" %}
+        <span class="inline-flex items-center gap-1 bg-green-50 text-green-700 px-2.5 py-1.5 rounded-full text-sm font-medium">🟢 Baja</span>
+        {% endif %}
+        {% if estado == "INICIADO" %}
+            <span class="inline-flex items-center gap-1 bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full text-sm font-medium">{{ iconos[estado] }} {{ labels[estado] }}</span>
+        {% elif estado == "EN_SUCURSAL" %}
+            <span class="inline-flex items-center gap-1 bg-yellow-50 text-yellow-700 px-3 py-1.5 rounded-full text-sm font-medium">{{ iconos[estado] }} {{ labels[estado] }}</span>
+        {% elif estado == "EN_TRANSITO" %}
+            <span class="inline-flex items-center gap-1 bg-orange-50 text-orange-700 px-3 py-1.5 rounded-full text-sm font-medium">{{ iconos[estado] }} {{ labels[estado] }}</span>
+        {% elif estado == "ENTREGADO" %}
+            <span class="inline-flex items-center gap-1 bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-sm font-medium">{{ iconos[estado] }} {{ labels[estado] }}</span>
+        {% elif estado == "CANCELADO" %}
+            <span class="inline-flex items-center gap-1 bg-red-50 text-red-600 px-3 py-1.5 rounded-full text-sm font-medium">{{ iconos[estado] }} {{ labels[estado] }}</span>
+        {% endif %}
+    </div>
 </div>
 
 <!-- Mensajes de feedback -->
