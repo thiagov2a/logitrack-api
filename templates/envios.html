@@ -20,10 +20,6 @@
     "CANCELADO": "🔴"
 } %}
 
-{% set prioridad = envio.prioridad_ml | string if envio.prioridad_ml else None %}
-{% set prioridad = prioridad.split('.')[-1] if prioridad else None %}
-{% if prioridad == "ALTA" %}
-
 <div class="flex items-center justify-between mb-6">
     <div>
         <h1 class="text-2xl font-bold text-gray-800">Envíos</h1>
@@ -257,6 +253,9 @@
                     </td>
 
                     <td class="px-5 py-3.5">
+                        {% set prioridad = envio.prioridad_ml | string if envio.prioridad_ml else '' %}
+                        {% set prioridad = prioridad.split('.')[-1] %}
+                        {% if prioridad == "ALTA" %}
                         <span class="inline-flex items-center gap-1 bg-red-50 text-red-600 px-2.5 py-1 rounded-full text-xs font-medium">
                             🔴 Alta
                         </span>

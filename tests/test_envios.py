@@ -415,7 +415,12 @@ def test_filtrar_envios_fecha_desde_mayor_hasta_retorna_400(client):
 
 
 def test_listar_envios_ordenados_por_fecha(client):
-    payload = {"origen": "Salta", "destino": "Jujuy", "remitente": {"dni": "11111111", "nombre": "Test"}}
+    payload = {
+        "origen": "Salta",
+        "destino": "Jujuy",
+        "remitente": {"dni": "11111111", "nombre": "Test"},
+        "destinatario": {"dni": "22222222", "nombre": "Dest Test"},
+    }
     client.post("/api/envios/", json=payload)
     response = client.get("/api/envios/")
     fechas = [e["fechaCreacion"] for e in response.json()]
