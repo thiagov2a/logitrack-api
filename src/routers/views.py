@@ -359,26 +359,6 @@ def cambiar_estado_form(
 
 
 # --- Cambio masivo de estado desde HTML ---
-@router.post("/envios/cambio-masivo/confirmar")
-async def confirmar_cambio_masivo_form(request: Request):
-    """Recibe los tracking_ids seleccionados y muestra la página de confirmación."""
-    usuario = get_usuario_actual(request)
-    if not usuario or usuario.rol not in ["supervisor", "administrador"]:
-        return RedirectResponse(url="/?error=Acceso+denegado", status_code=303)
-    form = await request.form()
-    tracking_ids = form.getlist("tracking_ids")
-    if not tracking_ids:
-        return RedirectResponse(url="/?error=No+se+selecciono+ningun+envio", status_code=303)
-    envios_sel = [e for e in mock_db_envios if e.trackingId in tracking_ids]
-    return _render(
-        "cambio_masivo.html", request,
-        envios=envios_sel,
-        tracking_ids=tracking_ids,
-        rol=usuario.rol,
-        usuario=usuario,
-    )
-
-
 @router.post("/envios/cambio-masivo")
 async def cambiar_estado_masivo_form(
     request: Request,

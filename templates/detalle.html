@@ -367,6 +367,9 @@
                         {{ iconos.get(ev, '') }} {{ labels.get(ev, ev) }}
                     </p>
                     <p class="text-xs text-gray-500 mt-0.5">📍 {{ evento.ubicacion }}</p>
+                    {% if evento.usuario %}
+                    <p class="text-xs text-gray-400 mt-0.5">👤 {{ evento.usuario }}</p>
+                    {% endif %}
                     {% if evento.observaciones %}
                     <p class="text-xs text-gray-400 italic mt-0.5">"{{ evento.observaciones }}"</p>
                     {% endif %}

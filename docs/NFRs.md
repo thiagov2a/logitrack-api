@@ -39,7 +39,7 @@ Las operaciones de cambio de estado están restringidas a los roles **Supervisor
 ## Seguridad y Legales (Security & Legal)
 
 **NFR-03 — Cifrado de credenciales**  
-Las contraseñas de los usuarios se almacenan hasheadas con **bcrypt** mediante `passlib`. La comparación en el login usa `pwd_context.verify()`, nunca texto plano. El campo `password` está marcado con `Field(exclude=True)` en el modelo Pydantic para que nunca aparezca en respuestas JSON.
+Las contraseñas de los usuarios se almacenan hasheadas con **bcrypt** (biblioteca `bcrypt` directa). La comparación en el login usa `bcrypt.checkpw()`, nunca texto plano. El campo `password` está marcado con `Field(exclude=True)` en el modelo Pydantic para que nunca aparezca en respuestas JSON.
 
 **NFR-04 — Enmascaramiento Ley 25.326**  
 Los endpoints públicos de la API REST usan modelos de respuesta (`EnvioResumen`, `EnvioDetalle`, `ClientePublico`) que excluyen el DNI del remitente y destinatario. El DNI solo es accesible mediante el endpoint de exportación CSV (`/exportar-cliente`), restringido exclusivamente al rol Administrador.
