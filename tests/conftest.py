@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from main import app
 from src.routers import envios as envios_module
 from src.routers import auth as auth_module
+from src.routers.auth import _hash
 from src.models.envio import Envio
 from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
@@ -10,9 +11,9 @@ from src.models.enums import EstadoEnvio
 from src.models.usuario import Usuario
 
 USUARIOS_INICIALES = [
-    Usuario(email="operador@logitrack.com", password="operador123", nombre="Juan Pérez", rol="operador"),
-    Usuario(email="supervisor@logitrack.com", password="supervisor123", nombre="María López", rol="supervisor"),
-    Usuario(email="admin@logitrack.com", password="admin123", nombre="Carlos García", rol="administrador"),
+    Usuario(email="operador@logitrack.com", password=_hash("operador123"), nombre="Juan Pérez", rol="operador"),
+    Usuario(email="supervisor@logitrack.com", password=_hash("supervisor123"), nombre="María López", rol="supervisor"),
+    Usuario(email="admin@logitrack.com", password=_hash("admin123"), nombre="Carlos García", rol="administrador"),
 ]
 
 

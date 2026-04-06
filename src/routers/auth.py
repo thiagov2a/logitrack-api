@@ -2,16 +2,36 @@ from fastapi import APIRouter, Request, Form, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
+import bcrypt
 from src.models.usuario import Usuario
 
 router = APIRouter(tags=["Auth"])
 templates = Jinja2Templates(directory="templates")
 
+
+def _hash(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+def _verificar(password: str, hashed: str) -> bool:
+    return bcrypt.checkpw(password.encode(), hashed.encode())
+
+
 # --- Usuarios simulados ---
 mock_usuarios: list[Usuario] = [
-    Usuario(email="operador@logitrack.com", password="operador123", nombre="Juan Pérez", rol="operador"),
-    Usuario(email="supervisor@logitrack.com", password="supervisor123", nombre="María López", rol="supervisor"),
-    Usuario(email="admin@logitrack.com", password="admin123", nombre="Carlos García", rol="administrador"),
+    Usuario(email="operador@logitrack.com", password=_hash("operador123"), nombre="Juan Pérez", rol="operador"),
+    Usuario(email="operador2@logitrack.com", password=_hash("operador123"), nombre="Sofía Ramírez", rol="operador"),
+    Usuario(email="operador3@logitrack.com", password=_hash("operador123"), nombre="Tomás Aguirre", rol="operador"),
+    Usuario(email="supervisor@logitrack.com", password=_hash("supervisor123"), nombre="María López", rol="supervisor"),
+    Usuario(
+        email="supervisor2@logitrack.com", password=_hash("supervisor123"),
+        nombre="Nicolás Ibarra", rol="supervisor"),
+    Usuario(
+        email="admin@logitrack.com", password=_hash("admin123"),
+        nombre="Carlos García", rol="administrador"),
+    Usuario(
+        email="inactivo@logitrack.com", password=_hash("inactivo123"),
+        nombre="Pedro Inactivo", rol="operador", activo=False),
 ]
 
 
@@ -43,7 +63,7 @@ def procesar_login(
 ):
     usuario = next((u for u in mock_usuarios if u.email == email and u.activo), None)
 
-    if not usuario or usuario.password != password:
+    if not usuario or not _verificar(password, usuario.password):
         return _render("login.html", request, error="Usuario o contraseña incorrectos.")
 
     redirect = RedirectResponse(url="/", status_code=303)

@@ -25,22 +25,27 @@ La especialización de Python en datos (Pandas, Scikit-Learn) supera las capacid
 
 ---
 
-## ADR-002: Selección del Algoritmo de Clasificación para Probabilidad de Retraso
+## ADR-002: Selección del Algoritmo de Clasificación para Predicción de Prioridad
 
 **Fecha:** 22 de marzo de 2026 | **Estado:** Implementado
 
 **Contexto:**  
-Se necesita clasificar envíos ("A tiempo" / "Con retraso") priorizando precisión e interpretabilidad. Se evaluaron Regresión Logística, Random Forest y Naïve Bayes.
+Se necesita clasificar automáticamente la prioridad de cada envío (ALTA / MEDIA / BAJA) al momento del registro, basándose en sus características físicas (peso y dimensiones). Se evaluaron Regresión Logística, Random Forest y Naïve Bayes.
 
 **Decisión:**  
 Utilizar Random Forest como algoritmo de clasificación.
 
 **Justificación:**  
-Captura naturalmente la no-linealidad de los retrasos logísticos, maneja bien variables categóricas sin escalado previo y permite generar gráficos de "Feature Importance" vitales para el negocio.
+Captura naturalmente la no-linealidad entre peso/volumen y prioridad logística, maneja bien variables con valores faltantes mediante imputación de medianas, y permite generar gráficos de "Feature Importance" vitales para el negocio.
+
+**Features utilizadas:** `peso_kg`, `largo_cm`, `ancho_cm`, `alto_cm`  
+**Clases de salida:** `ALTA`, `MEDIA`, `BAJA`  
+**Dataset:** `analysis/dataset_envios_ml.csv` con etiquetas asignadas manualmente por criterio de negocio.
 
 **Consecuencias:**
 - Positivas: Mayor precisión (F1-Score), robustez ante outliers y mitigación del overfitting.
 - Riesgos: Mayor costo computacional y peso del modelo exportado.
+- El modelo se exporta como `modelo_prioridad.pkl` + `imputer.pkl` y se carga una sola vez al iniciar la API.
 
 ---
 
@@ -61,4 +66,4 @@ Aporta validación automática, tipado estricto y generación de documentación 
 - Positivas: Evita errores en producción por contratos mal formados; facilita pruebas y futuras integraciones de UI.
 - Seguridad: Permite fácil implementación de JWT y auditorías (Ley 25.326).
 - Riesgos: Curva de aprendizaje de FastAPI.
-- Mitigación: Ejemplos de payloads y versionado explícito en la URL (`/api/v1/`).
+- Mitigación: Ejemplos de payloads y documentación autogenerada en `/docs` y `/redoc`.

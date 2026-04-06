@@ -55,6 +55,35 @@ class ConfirmacionAnonimizacion(BaseModel):
     confirmar: bool
 
 
+# --- Modelos de respuesta (sin datos sensibles) ---
+
+class ClientePublico(BaseModel):
+    nombre: Optional[str] = None
+    anonimizado: bool = False
+
+
+class EnvioResumen(BaseModel):
+    trackingId: Optional[str]
+    origen: str
+    destino: str
+    fechaCreacion: datetime
+    estado_actual: EstadoEnvio
+    prioridad_ml: Optional[PrioridadEnvio] = None
+    remitente: ClientePublico
+
+
+class EnvioDetalle(BaseModel):
+    trackingId: Optional[str]
+    origen: str
+    destino: str
+    fechaCreacion: datetime
+    prioridad_ml: Optional[PrioridadEnvio] = None
+    consentimiento: bool
+    remitente: ClientePublico
+    destinatario: Optional[ClientePublico] = None
+    historial: list
+
+
 # --- Helpers ---
 
 ESTADOS_TERMINALES = [
@@ -109,7 +138,9 @@ def _crear_semilla(
     peso: float = None,
     largo: float = None,
     ancho: float = None,
-    alto: float = None
+    alto: float = None,
+    dest_dni: str = "00000000",
+    dest_nombre: str = "Destinatario Ejemplo",
 ) -> Envio:
 
     dims = None
@@ -123,7 +154,7 @@ def _crear_semilla(
         peso_kg=peso,
         dimensiones=dims,
         remitente=Cliente(dni=dni, nombre=nombre),
-        destinatario=Cliente(dni="00000000", nombre="Destinatario Ejemplo"),
+        destinatario=Cliente(dni=dest_dni, nombre=dest_nombre),
     )
 
     envio.historial.append(
@@ -156,12 +187,51 @@ def _crear_semilla(
 
 
 mock_db_envios = [
-    _crear_semilla("Buenos Aires", "Cordoba", "12345678", "Ana Gomez", EstadoEnvio.EN_TRANSITO,
-                   peso=25.0, largo=80, ancho=60, alto=50),
-    _crear_semilla("Rosario", "Mendoza", "87654321", "Luis Perez", EstadoEnvio.EN_SUCURSAL,
-                   peso=8.0, largo=40, ancho=30, alto=25),
-    _crear_semilla("La Plata", "Tucuman", "11223344", "Maria Lopez", EstadoEnvio.INICIADO,
-                   peso=1.0, largo=10, ancho=10, alto=5),
+    _crear_semilla("Buenos Aires", "Cordoba", "12345678", "Ana Gomez",
+                   EstadoEnvio.EN_TRANSITO, peso=25.0, largo=80, ancho=60, alto=50,
+                   dest_dni="98765432", dest_nombre="Pedro Alvarez"),
+    _crear_semilla("Rosario", "Mendoza", "87654321", "Luis Perez",
+                   EstadoEnvio.EN_SUCURSAL, peso=8.0, largo=40, ancho=30, alto=25,
+                   dest_dni="11223345", dest_nombre="Elena Suarez"),
+    _crear_semilla("La Plata", "Tucuman", "11223344", "Maria Lopez",
+                   EstadoEnvio.INICIADO, peso=1.0, largo=10, ancho=10, alto=5,
+                   dest_dni="22334456", dest_nombre="Jorge Medina"),
+    _crear_semilla("Cordoba", "Salta", "22334455", "Carlos Fernandez",
+                   EstadoEnvio.ENTREGADO, peso=32.0, largo=100, ancho=80, alto=60,
+                   dest_dni="33445567", dest_nombre="Silvia Ortega"),
+    _crear_semilla("Mendoza", "Buenos Aires", "33445566", "Laura Martinez",
+                   EstadoEnvio.CANCELADO, peso=0.5, largo=15, ancho=10, alto=8,
+                   dest_dni="44556678", dest_nombre="Ricardo Blanco"),
+    _crear_semilla("Tucuman", "Rosario", "44556677", "Diego Sanchez",
+                   EstadoEnvio.EN_TRANSITO, peso=12.0, largo=55, ancho=45, alto=35,
+                   dest_dni="55667789", dest_nombre="Monica Reyes"),
+    _crear_semilla("Salta", "La Plata", "55667788", "Valeria Torres",
+                   EstadoEnvio.INICIADO, peso=3.5, largo=25, ancho=20, alto=15,
+                   dest_dni="66778890", dest_nombre="Gustavo Paredes"),
+    _crear_semilla("Neuquen", "CABA", "66778899", "Roberto Diaz",
+                   EstadoEnvio.EN_SUCURSAL, peso=18.0, largo=70, ancho=50, alto=40,
+                   dest_dni="77889901", dest_nombre="Patricia Sosa"),
+    _crear_semilla("CABA", "Mendoza", "77889900", "Florencia Ruiz",
+                   EstadoEnvio.ENTREGADO, peso=6.0, largo=35, ancho=28, alto=20,
+                   dest_dni="88990012", dest_nombre="Hector Molina"),
+    _crear_semilla("Mar del Plata", "Cordoba", "88990011", "Andres Morales",
+                   EstadoEnvio.INICIADO, peso=0.3,
+                   dest_dni="99001123", dest_nombre="Claudia Ibarra"),
+    _crear_semilla("Rosario", "Tucuman", "99001122", "Natalia Vega",
+                   EstadoEnvio.EN_TRANSITO, peso=22.0, largo=90, ancho=70, alto=55,
+                   dest_dni="10203041", dest_nombre="Fernando Acosta"),
+    _crear_semilla("La Plata", "Neuquen", "10203040", "Sergio Castro",
+                   EstadoEnvio.CANCELADO, peso=4.0, largo=30, ancho=22, alto=18,
+                   dest_dni="20304051", dest_nombre="Adriana Campos"),
+    _crear_semilla("Salta", "Buenos Aires", "20304050", "Camila Romero",
+                   EstadoEnvio.ENTREGADO, peso=9.5, largo=45, ancho=35, alto=28,
+                   dest_dni="30405061", dest_nombre="Martin Vargas"),
+    _crear_semilla("CABA", "Rosario", "30405060", "Pablo Gutierrez",
+                   EstadoEnvio.INICIADO, peso=2.0, largo=20, ancho=15, alto=10,
+                   dest_dni="40506071", dest_nombre="Sandra Ponce"),
+    _crear_semilla("Mendoza", "Salta", "40506070", "Lucia Herrera",
+                   EstadoEnvio.EN_SUCURSAL, peso=15.0, largo=65, ancho=48, alto=38,
+                   dest_dni="50607081", dest_nombre="Oscar Navarro"),
 ]
 
 
@@ -288,7 +358,7 @@ def registrar_envio(nuevo_envio: Envio):
 
 
 # US-11 / US-14 / US-15: Listar envios con filtros opcionales
-@router.get("/")
+@router.get("/", response_model=List[EnvioResumen])
 def listar_envios(
     estados: Optional[List[EstadoEnvio]] = Query(None),
     fecha_desde: Optional[datetime] = Query(None),
@@ -296,8 +366,8 @@ def listar_envios(
 ):
     """
     US-11: Listado general de envios.
-    US-14: Filtrar por uno o varios estados. Ejemplo: ?estados=INICIADO&estados=EN_SUCURSAL
-    US-15: Filtrar por rango de fecha de creacion. Ejemplo: ?fecha_desde=2024-01-01&fecha_hasta=2024-12-31
+    US-14: Filtrar por uno o varios estados.
+    US-15: Filtrar por rango de fecha de creacion.
     """
     resultado = list(mock_db_envios)
 
@@ -316,7 +386,23 @@ def listar_envios(
     if fecha_hasta:
         resultado = [e for e in resultado if e.fechaCreacion <= fecha_hasta]
 
-    return sorted(resultado, key=lambda e: e.fechaCreacion.replace(tzinfo=None))
+    resultado = sorted(resultado, key=lambda e: e.fechaCreacion.replace(tzinfo=None))
+
+    return [
+        EnvioResumen(
+            trackingId=e.trackingId,
+            origen=e.origen,
+            destino=e.destino,
+            fechaCreacion=e.fechaCreacion,
+            estado_actual=_estado_actual(e),
+            prioridad_ml=e.prioridad_ml,
+            remitente=ClientePublico(
+                nombre=e.remitente.nombre if not e.remitente.anonimizado else None,
+                anonimizado=e.remitente.anonimizado,
+            ),
+        )
+        for e in resultado
+    ]
 
 
 # US-17: Cambio de estado masivo (solo Supervisor)
@@ -390,10 +476,27 @@ def buscar_resumen_envio(tracking_id: str):
 
 
 # US-13: Detalle completo con historial
-@router.get("/{tracking_id}/detalles")
+@router.get("/{tracking_id}/detalles", response_model=EnvioDetalle)
 def buscar_detalle_envio(tracking_id: str):
     """US-13: Devuelve toda la informacion del envio incluyendo historial de eventos."""
-    return _buscar_envio(tracking_id)
+    e = _buscar_envio(tracking_id)
+    return EnvioDetalle(
+        trackingId=e.trackingId,
+        origen=e.origen,
+        destino=e.destino,
+        fechaCreacion=e.fechaCreacion,
+        prioridad_ml=e.prioridad_ml,
+        consentimiento=e.consentimiento,
+        remitente=ClientePublico(
+            nombre=e.remitente.nombre if not e.remitente.anonimizado else None,
+            anonimizado=e.remitente.anonimizado,
+        ),
+        destinatario=ClientePublico(
+            nombre=e.destinatario.nombre if e.destinatario and not e.destinatario.anonimizado else None,
+            anonimizado=e.destinatario.anonimizado if e.destinatario else False,
+        ) if e.destinatario else None,
+        historial=e.historial,
+    )
 
 
 # US-19: Historial de estados

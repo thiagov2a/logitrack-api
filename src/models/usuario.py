@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Usuario(BaseModel):
     email: str
-    password: str
+    password: str = Field(exclude=True)
     nombre: str
-    rol: str  # operador, supervisor, administrador
+    rol: str
     activo: bool = True
