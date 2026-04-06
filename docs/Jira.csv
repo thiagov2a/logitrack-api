@@ -1,0 +1,341 @@
+Resumen,Clave de incidencia,ID de la incidencia,Tipo de Incidencia,Estado,Clave del proyecto,Nombre del proyecto,Tipo de proyecto,Responsable del proyecto,ID del responsable del proyecto,Descripción del proyecto,Prioridad,Resolución,Persona asignada,ID de la persona asignada,Informador,ID del informador,Creador,ID del creador,Creada,Actualizada,Vista por Última Vez,Resuelta,Fecha de vencimiento,Votos,Descripción,Entorno,Interesados,ID de los interesados,Estimación original,Trabajo restante estimado,Tiempo Trabajado,Relación de trabajo,Σ Estimación original,Σ Trabajo restante estimado,Σ Tiempo empleado,Nivel de Seguridad,Campo personalizado (Issue color),Campo personalizado (Rank),Sprint,Campo personalizado (Start date),Campo personalizado (Story point estimate),Campo personalizado (Team),Campo personalizado (Vulnerability),Campo personalizado (development),Categoría de estado,Categoría de estado cambiada,Principal,Clave principal,Parent summary
+NFR-08: Estándar de Comunicación,SFGLD-42,10140,Tarea,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,22/mar/26 2:24 AM,22/mar/26 2:50 AM,22/mar/26 6:41 PM,,,0,"{panel:bgColor=#deebff}
+Toda la comunicación entre el frontend y la Mock API (backend) debe realizarse estrictamente mediante el formato JSON (application/json).
+{panel}
+
+*FURSP+*
+
+{quote}Supportability{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i000a7:,,,,,,,Por hacer,22/mar/26 2:24 AM,10073,SFGLD-7,Arquitectura / Setup
+NFR-07: Integración Continua,SFGLD-41,10139,Tarea,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,22/mar/26 2:24 AM,22/mar/26 2:50 AM,22/mar/26 6:22 PM,,,0,"{panel:bgColor=#deebff}
+Todo código subido a la rama principal (main) debe pasar automáticamente el pipeline de GitHub Actions (Linter).
+{panel}
+
+*FURPS+*
+
+{quote}Supportability{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0009z:,,,,,,,Por hacer,22/mar/26 2:24 AM,10073,SFGLD-7,Arquitectura / Setup
+NFR-06: Prevención de Errores,SFGLD-40,10138,Tarea,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,22/mar/26 2:23 AM,22/mar/26 2:50 AM,22/mar/26 6:22 PM,,,0,"{panel:bgColor=#deebff}
+Todos los formularios de alta deben realizar validaciones en el frontend (campos vacíos, formato de email, etc.) mostrando mensajes de error claros antes de enviar la petición.
+{panel}
+
+*FURPS+*
+
+{quote}Usability{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0009r:,,,,,,,Por hacer,22/mar/26 2:24 AM,10073,SFGLD-7,Arquitectura / Setup
+NFR-05: Diseño Responsivo,SFGLD-39,10137,Tarea,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,22/mar/26 2:23 AM,22/mar/26 2:50 AM,22/mar/26 2:43 AM,,,0,"{panel:bgColor=#deebff}
+La interfaz web debe adaptarse sin pérdida de funcionalidad a resoluciones de escritorio y a dispositivos móviles.
+{panel}
+
+*FURPS+*
+
+{quote}Usability{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0009j:,,,,,,,Por hacer,22/mar/26 2:23 AM,10073,SFGLD-7,Arquitectura / Setup
+NFR-04: Enmascaramiento Ley 25.326,SFGLD-38,10136,Tarea,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,22/mar/26 2:23 AM,22/mar/26 2:50 AM,22/mar/26 6:21 PM,,,0,"{panel:bgColor=#deebff}
+En la vista pública o general de seguimiento, el sistema debe ofuscar los datos personales del remitente y destinatario para proteger su privacidad.
+{panel}
+
+*FURPS+*
+
+{quote}Legal (+){quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0009b:,,,,,,,Por hacer,22/mar/26 2:23 AM,10073,SFGLD-7,Arquitectura / Setup
+NFR-03: Cifrado de Credenciales,SFGLD-37,10135,Tarea,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,22/mar/26 2:23 AM,22/mar/26 2:50 AM,22/mar/26 6:21 PM,,,0,"{panel:bgColor=#deebff}
+Las contraseñas de los usuarios en la base de datos (o archivo simulado) nunca deben almacenarse en texto plano; deben estar protegidas mediante un algoritmo de hashing.
+{panel}
+
+*FURPS+*
+
+{quote}Security (+){quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00093:,,,,,,,Por hacer,22/mar/26 2:23 AM,10073,SFGLD-7,Arquitectura / Setup
+NFR-02: Procesamiento Masivo,SFGLD-36,10134,Tarea,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,22/mar/26 2:23 AM,22/mar/26 2:50 AM,22/mar/26 6:21 PM,,,0,"{panel:bgColor=#deebff}
+El procesamiento del archivo CSV para la carga masiva de envíos no debe bloquear la interfaz de usuario, y el backend debe procesar un archivo de hasta 500 registros en menos de 10 segundos.
+{panel}
+
+*FURPS+*
+
+{quote}Performance{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0008v:,,,,,,,Por hacer,22/mar/26 2:23 AM,10073,SFGLD-7,Arquitectura / Setup
+NFR-01: Tiempo de respuesta,SFGLD-35,10133,Tarea,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,22/mar/26 2:23 AM,22/mar/26 2:50 AM,22/mar/26 6:21 PM,,,0,"{panel:bgColor=#deebff}
+El sistema debe resolver las consultas de búsqueda de un envío por su Tracking ID en un tiempo máximo de 2 segundos bajo condiciones normales de red.
+{panel}
+
+*FURPS+*
+
+{quote}Performance{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0008n:,,,,,,,Por hacer,22/mar/26 2:23 AM,10073,SFGLD-7,Arquitectura / Setup
+US27: Filtrar envíos por prioridad IA,SFGLD-34,10100,Historia,Desarrollo,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,Mauricio Quevedo,712020:2f95521c-bf4d-44a2-a517-166702e2efc4,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,05/abr/26 10:28 PM,22/mar/26 8:30 PM,,,0,"{panel:bgColor=#deebff}
+Como Supervisor, quiero filtrar la lista de envíos según la prioridad de la IA para organizar primero la salida de los paquetes más urgentes.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El listado de envíos debe tener una columna ordenable por ""Prioridad"".
+# Por defecto, la vista del Supervisor debe mostrar primero los envíos con prioridad ""Alta"".{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00075:8,SFGLD Sprint 3,,2.0,,,,En curso,05/abr/26 10:28 PM,10072,SFGLD-6,Machine Learning
+US26: Cambio manual de prioridad de IA,SFGLD-33,10099,Historia,Revisión,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,Mauricio Quevedo,712020:2f95521c-bf4d-44a2-a517-166702e2efc4,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,05/abr/26 10:29 PM,05/abr/26 10:23 PM,,,0,"{panel:bgColor=#deebff}
+Como Supervisor, quiero poder cambiar manualmente la prioridad sugerida por la IA si detecto un error (falso positivo).
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El Supervisor debe tener habilitado un botón para ""Modificar Prioridad"".
+# El sistema debe permitir pisar el valor de la IA, pero debe guardar un registro interno (booleano {{prioridadManual = true}}) para futuras auditorías.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00089:,SFGLD Sprint 3,,2.0,,,,En curso,03/abr/26 2:00 AM,10072,SFGLD-6,Machine Learning
+US25: Sugerencia automática de prioridad por IA,SFGLD-32,10098,Historia,Revisión,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,Mauricio Quevedo,712020:2f95521c-bf4d-44a2-a517-166702e2efc4,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,03/abr/26 1:59 AM,26/mar/26 7:40 PM,,,0,"{panel:bgColor=#deebff}
+Como Operador, quiero que la Inteligencia Artificial sugiera automáticamente un nivel de prioridad (Alta/Media/Baja) al registrar el envío.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# Al crear un envío, el backend (modelo) debe retornar un valor de Prioridad (Alta, Media, Baja).
+# La prioridad sugerida debe mostrarse en pantalla con una etiqueta visual (ej. rojo para Alta).{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00079:,SFGLD Sprint 3,,3.0,,,,En curso,03/abr/26 12:25 AM,10072,SFGLD-6,Machine Learning
+US24: Carga de Dataset de entrenamiento,SFGLD-31,10097,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Mauricio Quevedo,712020:2f95521c-bf4d-44a2-a517-166702e2efc4,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,30/mar/26 7:47 PM,26/mar/26 7:40 PM,30/mar/26 7:47 PM,,0,"{panel:bgColor=#deebff}
+Como Analista de Datos, quiero cargar un Dataset de entrenamiento en el sistema para alimentar el modelo de Machine Learning.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}El sistema debe validar que el archivo contenga las columnas requeridas para el modelo.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0004t:5z,SFGLD Sprint 2,,8.0,,,,Listo,30/mar/26 7:47 PM,10072,SFGLD-6,Machine Learning
+US23: Exportación de datos de cliente (Derecho de Acceso),SFGLD-30,10096,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Pablo Rodriguez,712020:3f49e0f7-1120-417c-ac02-26c0aa8e84cf,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,04/abr/26 5:34 PM,05/abr/26 9:58 PM,04/abr/26 5:34 PM,,0,"{panel:bgColor=#deebff}
+Como Administrador, quiero generar un extracto de los datos almacenados de un cliente para responder a solicitudes legales de acceso a la información.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}El Administrador debe poder descargar un archivo {{csv}} que contenga toda la información personal guardada sobre un cliente en particular.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00075:i,SFGLD Sprint 3,,3.0,,,,Listo,04/abr/26 5:34 PM,10071,SFGLD-5,Compliance / Ley
+US22: Anonimización de datos (Derecho al Olvido),SFGLD-29,10095,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Pablo Rodriguez,712020:3f49e0f7-1120-417c-ac02-26c0aa8e84cf,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,04/abr/26 5:34 PM,22/mar/26 8:34 PM,04/abr/26 5:34 PM,,0,"{panel:bgColor=#deebff}
+Como Administrador, quiero poder anonimizar los datos personales de un envío ya finalizado para cumplir con el Derecho al Olvido.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# Al ejecutar la anonimización, los datos del Cliente (Nombre, DNI, Dirección) deben ser reemplazados irreversiblemente por asteriscos (***) en la base de datos.
+# El historial de movimientos logísticos del paquete debe mantenerse intacto (no se borra el paquete, solo los datos de la persona).{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00075:9,SFGLD Sprint 3,,5.0,,,,Listo,04/abr/26 5:34 PM,10071,SFGLD-5,Compliance / Ley
+US21: Registro de Consentimiento Informado (Checkbox),SFGLD-28,10094,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Pablo Rodriguez,712020:3f49e0f7-1120-417c-ac02-26c0aa8e84cf,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,03/abr/26 8:19 PM,03/abr/26 8:19 PM,03/abr/26 8:19 PM,,0,"{panel:bgColor=#deebff}
+Como Operador, quiero registrar mediante un Checkbox el Consentimiento Informado del remitente al crear el envío para cumplir con la Ley 25.326.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El formulario de creación de envíos debe contener un checkbox explícito de ""Acepto políticas de privacidad"".
+# El sistema no debe permitir guardar el envío si este checkbox no está marcado.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00076:i,SFGLD Sprint 3,,1.0,,,,Listo,03/abr/26 8:19 PM,10071,SFGLD-5,Compliance / Ley
+US20: Agregar observación al cambiar estado,SFGLD-27,10093,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Mauricio Quevedo,712020:2f95521c-bf4d-44a2-a517-166702e2efc4,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,28/mar/26 6:03 AM,30/mar/26 4:59 AM,28/mar/26 6:03 AM,,0,"{panel:bgColor=#deebff}
+Como Operador, quiero poder agregar una observación de texto al actualizar un estado para documentar problemas.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# Al actualizar un estado, debe aparecer un campo de texto (textarea) opcional.
+# Si se ingresa una observación, esta debe quedar visible en el Timeline del historial.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0004t:5,SFGLD Sprint 2,,2.0,,,,Listo,28/mar/26 6:03 AM,10070,SFGLD-4,Auditoría / Estados
+US19: Historial de estados en detalle,SFGLD-26,10092,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Low,Listo,Mauricio Quevedo,712020:2f95521c-bf4d-44a2-a517-166702e2efc4,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,28/mar/26 6:03 AM,26/mar/26 7:35 PM,28/mar/26 6:03 AM,,0,"{panel:bgColor=#deebff}
+Como Usuario del sistema, quiero ver un historial en el detalle del envío con todos sus cambios de estado anteriores.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# En la vista de detalle, debe existir una pestaña o sección ""Historial"".
+# Los eventos deben mostrarse como una línea de tiempo con fecha, hora y el estado adquirido.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0004t:5i,SFGLD Sprint 2,,2.0,,,,Listo,28/mar/26 6:03 AM,10070,SFGLD-4,Auditoría / Estados
+US18: Registro automático de auditoría,SFGLD-25,10091,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Low,Listo,Mauricio Quevedo,712020:2f95521c-bf4d-44a2-a517-166702e2efc4,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,28/mar/26 6:03 AM,30/mar/26 4:59 AM,28/mar/26 6:03 AM,,0,"{panel:bgColor=#deebff}
+Como Administrador, quiero que el sistema registre la fecha, hora y el usuario exacto cada vez que se cambia un estado.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}El sistema debe guardar qué Usuario hizo el cambio y el Timestamp exacto de la acción sin que el usuario tenga que ingresarlo manualmente.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0004t:4i,SFGLD Sprint 2,,5.0,,,,Listo,28/mar/26 6:03 AM,10070,SFGLD-4,Auditoría / Estados
+US17: Cambio de estado masivo,SFGLD-24,10090,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Lowest,Listo,Pablo Rodriguez,712020:3f49e0f7-1120-417c-ac02-26c0aa8e84cf,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,03/abr/26 8:35 PM,26/mar/26 11:08 PM,03/abr/26 8:35 PM,,0,"{panel:bgColor=#deebff}
+Como Supervisor, quiero poder seleccionar múltiples envíos a la vez y cambiarles el estado en lote para agilizar el despacho.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El Supervisor debe poder seleccionar mediante checkboxes múltiples envíos de la lista.
+# Al aplicar el cambio masivo, la acción se aplica solo a los seleccionados.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00076:r,SFGLD Sprint 3,,8.0,,,,Listo,03/abr/26 8:35 PM,10070,SFGLD-4,Auditoría / Estados
+US16: Cambiar estado individual de envío,SFGLD-23,10089,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Highest,Listo,Mauricio Quevedo,712020:2f95521c-bf4d-44a2-a517-166702e2efc4,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,28/mar/26 6:03 AM,22/mar/26 8:40 PM,28/mar/26 6:03 AM,,0,"{panel:bgColor=#deebff}
+Como Supervisor, quiero cambiar el estado de un envío (Iniciado, En sucursal, En tránsito, Entregado) para mantener la trazabilidad.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}El sistema debe respetar el flujo lógico: _Iniciado -> En sucursal -> En tránsito -> Entregado_. No se puede saltar de Iniciado a Entregado directamente.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0004t:4,SFGLD Sprint 2,,3.0,,,,Listo,28/mar/26 6:03 AM,10070,SFGLD-4,Auditoría / Estados
+US15: Filtrar envíos por rango de fechas,SFGLD-22,10088,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Pablo Rodriguez,712020:3f49e0f7-1120-417c-ac02-26c0aa8e84cf,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,30/mar/26 4:27 AM,22/mar/26 8:40 PM,30/mar/26 4:27 AM,,0,"{panel:bgColor=#deebff}
+Como Usuario del sistema, quiero filtrar envíos por rango de fechas de creación para localizar rápidamente paquetes de una semana específica.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El sistema debe proveer un selector de fecha ""Desde"" y ""Hasta"".
+# El sistema debe validar que la fecha ""Desde"" no sea mayor a la fecha ""Hasta"", mostrando un error si ocurre.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0004t:5x,SFGLD Sprint 2,,3.0,,,,Listo,30/mar/26 4:27 AM,10069,SFGLD-3,Tracking
+US14: Filtrar envíos por estado actual,SFGLD-21,10087,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Pablo Rodriguez,712020:3f49e0f7-1120-417c-ac02-26c0aa8e84cf,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,30/mar/26 4:27 AM,22/mar/26 8:41 PM,30/mar/26 4:27 AM,,0,"{panel:bgColor=#deebff}
+Como Usuario del sistema, quiero filtrar la lista de envíos por su estado actual para gestionar la carga de trabajo diaria.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El usuario debe poder seleccionar uno o varios estados desde un menú desplegable.
+# La tabla debe actualizarse en tiempo real para mostrar solo los envíos que coincidan.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0004t:5y,SFGLD Sprint 2,,3.0,,,,Listo,30/mar/26 4:27 AM,10069,SFGLD-3,Tracking
+US13: Visualización de detalle completo de envío,SFGLD-20,10086,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Pablo Rodriguez,712020:3f49e0f7-1120-417c-ac02-26c0aa8e84cf,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,23/mar/26 4:47 PM,22/mar/26 9:16 PM,23/mar/26 4:47 PM,,0,"{panel:bgColor=#deebff}
+Como Usuario del sistema, quiero ver el detalle completo de un envío (remitente, destino, estado actual, fecha) al seleccionarlo de la lista.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}Al hacer clic en un envío, se debe abrir una vista o modal con toda la información del remitente, destinatario y paquete.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00052:,SFGLD Sprint 1,,3.0,,,,Listo,23/mar/26 4:47 PM,10069,SFGLD-3,Tracking
+US12: Búsqueda de envío por Tracking ID,SFGLD-19,10085,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Pablo Rodriguez,712020:3f49e0f7-1120-417c-ac02-26c0aa8e84cf,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,23/mar/26 4:47 PM,22/mar/26 8:59 PM,23/mar/26 4:47 PM,,0,"{panel:bgColor=#deebff}
+Como Usuario del sistema, quiero buscar un envío ingresando su Tracking ID para acceder rápidamente a su detalle.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El buscador debe requerir coincidencia exacta del Tracking ID.
+# Si el ID no existe, debe mostrar una alerta: _""No se encontraron envíos con ese código""_.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00053:,SFGLD Sprint 1,,3.0,,,,Listo,23/mar/26 4:47 PM,10069,SFGLD-3,Tracking
+US11: Listado general de envíos,SFGLD-18,10084,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Mauricio Quevedo,712020:2f95521c-bf4d-44a2-a517-166702e2efc4,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,23/mar/26 4:40 PM,23/mar/26 5:01 PM,23/mar/26 4:40 PM,,0,"{panel:bgColor=#deebff}
+Como Usuario del sistema, quiero ver un listado general de los envíos registrados para conocer el volumen de paquetes.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# La tabla debe cargar los datos ordenados desde el más reciente al más antiguo.
+# Debe mostrar claramente el Tracking ID, Origen, Destino y Estado actual.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0004u:,SFGLD Sprint 1,,3.0,,,,Listo,23/mar/26 4:40 PM,10069,SFGLD-3,Tracking
+US10: Cancelar envío ingresado,SFGLD-17,10083,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Pablo Rodriguez,712020:3f49e0f7-1120-417c-ac02-26c0aa8e84cf,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,30/mar/26 4:09 AM,22/mar/26 5:09 AM,30/mar/26 4:09 AM,,0,"{panel:bgColor=#deebff}
+Como Operador, quiero cancelar un envío ingresado por error para mantener la base de datos limpia.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# Solo se permite cancelar envíos que estén en estado _""Iniciado""_.
+# Al cancelar, el sistema debe pedir confirmación y cambiar el estado del envío a _""Cancelado""_, sacándolo del flujo logístico activo.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0004t:5v,SFGLD Sprint 2,,2.0,,,,Listo,30/mar/26 4:09 AM,10068,SFGLD-2,Ingreso de Envíos
+US09: Editar datos de envío en estado inicial,SFGLD-16,10082,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Pablo Rodriguez,712020:3f49e0f7-1120-417c-ac02-26c0aa8e84cf,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,30/mar/26 4:09 AM,22/mar/26 5:09 AM,30/mar/26 4:09 AM,,0,"{panel:bgColor=#deebff}
+Como Operador, quiero poder editar los datos de un envío (solo en estado inicial) para corregir errores de tipeo.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El botón de ""Editar"" solo debe estar habilitado si el estado del envío es _""Iniciado""_.
+# Si el estado es diferente (ej. ""En tránsito""), los campos deben estar bloqueados (solo lectura).{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0004t:5r,SFGLD Sprint 2,,2.0,,,,Listo,30/mar/26 4:09 AM,10068,SFGLD-2,Ingreso de Envíos
+US08: Carga masiva de envíos por archivo CSV,SFGLD-15,10081,Historia,Revisión,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Lowest,,Mauricio Quevedo,712020:2f95521c-bf4d-44a2-a517-166702e2efc4,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,03/abr/26 1:57 AM,02/abr/26 7:22 PM,,,0,"{panel:bgColor=#deebff}
+Como Operador, quiero realizar cargas masivas de envíos mediante un archivo para agilizar el ingreso de grandes volúmenes.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El sistema solo debe aceptar archivos con extensión {{csv}}.
+# Si hay errores de formato en una fila (ej. falta el destino), el sistema debe cargar las filas válidas y mostrar un resumen indicando qué filas exactas fallaron.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00077:,SFGLD Sprint 3,,3.0,,,,En curso,03/abr/26 12:25 AM,10068,SFGLD-2,Ingreso de Envíos
+US07: Registro individual de envío con Tracking ID,SFGLD-14,10080,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,23/mar/26 4:38 PM,23/mar/26 5:58 AM,23/mar/26 4:38 PM,,0,"{panel:bgColor=#deebff}
+Como Operador, quiero registrar un envío mediante un formulario para que el sistema asigne un Tracking ID automático.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El sistema debe autogenerar un Tracking ID único alfanumérico al guardar el formulario.
+# Los campos Origen, Destino y DNI del Remitente son estrictamente obligatorios.
+# El envío recién creado debe inicializarse automáticamente en estado _""Iniciado""_.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00051:,SFGLD Sprint 1,,5.0,,,,Listo,23/mar/26 4:38 PM,10068,SFGLD-2,Ingreso de Envíos
+US06: Baja lógica de usuario,SFGLD-13,10079,Historia,Desarrollo,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Low,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,05/abr/26 8:45 PM,22/mar/26 8:51 PM,,,0,"{panel:bgColor=#deebff}
+Como Administrador, quiero poder desactivar (dar de baja) a usuarios que ya no pertenecen a la empresa para mantener la seguridad.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# Al dar de baja, el sistema pedirá una confirmación: _""¿Está seguro de desactivar este usuario?""_.
+# El usuario desactivado no se borra de la base de datos (se cambia a {{activo = false}}).
+# Un usuario inactivo no puede iniciar sesión en el sistema.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00075:7,SFGLD Sprint 3,,1.0,,,,En curso,05/abr/26 8:45 PM,10035,SFGLD-1,Accesos / IAM
+US05: Editar datos y roles de usuario,SFGLD-12,10078,Historia,Desarrollo,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Highest,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,05/abr/26 8:45 PM,22/mar/26 8:53 PM,,,0,"{panel:bgColor=#deebff}
+Como Administrador, quiero poder editar los datos o el rol (Operador/Supervisor) de un usuario existente para actualizar sus responsabilidades.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El Administrador puede modificar el rol de un usuario en cualquier momento.
+# Los cambios deben reflejarse inmediatamente en la base de datos sin necesidad de que el usuario editado cierre sesión.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00075:6,SFGLD Sprint 3,,1.0,,,,En curso,05/abr/26 8:45 PM,10035,SFGLD-1,Accesos / IAM
+US04: Listado de usuarios del sistema,SFGLD-11,10077,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,Listo,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,05/abr/26 9:33 PM,02/abr/26 7:11 PM,05/abr/26 9:33 PM,,0,"{panel:bgColor=#deebff}
+Como Administrador, quiero visualizar un listado de todos los usuarios activos e inactivos para auditar quién tiene acceso al sistema.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# La tabla debe mostrar las columnas: Nombre, Email, Rol y Estado (Activo/Inactivo).
+# La lista debe poder paginarse o permitir scroll si hay más de 10 usuarios.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00076:y,SFGLD Sprint 3,,1.0,,,,Listo,05/abr/26 9:33 PM,10035,SFGLD-1,Accesos / IAM
+US03: Alta de nuevos usuarios,SFGLD-10,10076,Historia,Revisión,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Highest,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,05/abr/26 9:04 PM,02/abr/26 7:10 PM,,,0,"{panel:bgColor=#deebff}
+Como Administrador, quiero registrar (dar de alta) a nuevos usuarios en el sistema con sus credenciales básicas para que puedan ingresar a la plataforma.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El formulario debe validar que el email ingresado no pertenezca a un usuario ya existente.
+# Todos los campos (Nombre, Email, Contraseña, Rol) son obligatorios.
+# El usuario creado debe guardarse con el estado {{activo = true}} por defecto.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0007w:,SFGLD Sprint 3,,2.0,,,,En curso,05/abr/26 8:45 PM,10035,SFGLD-1,Accesos / IAM
+US02: Cerrar sesión de usuario,SFGLD-9,10075,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Highest,Listo,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,04/abr/26 3:42 AM,22/mar/26 8:54 PM,04/abr/26 3:42 AM,,0,"{panel:bgColor=#deebff}
+Como Usuario, quiero poder cerrar mi sesión de forma segura para evitar accesos no autorizados en computadoras compartidas.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El sistema debe invalidar el token/sesión activa del usuario al hacer clic en ""Cerrar sesión"".
+# Si el usuario intenta volver atrás con el navegador tras cerrar sesión, el sistema debe bloquear el acceso y pedir login nuevamente.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00076:x,SFGLD Sprint 3,,2.0,,,,Listo,04/abr/26 3:42 AM,10035,SFGLD-1,Accesos / IAM
+US01: Iniciar sesión de usuario,SFGLD-8,10074,Historia,Implementado,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Highest,Listo,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 5:00 AM,04/abr/26 3:42 AM,03/abr/26 11:21 PM,04/abr/26 3:42 AM,,0,"{panel:bgColor=#deebff}
+Como Usuario, quiero poder iniciar sesión para acceder a las funcionalidades correspondientes a mi rol.
+{panel}
+
+*Criterios de aceptación*
+
+{quote}# El sistema debe permitir el ingreso solo con un email y contraseña válidos.
+# Si las credenciales son incorrectas, se debe mostrar el mensaje: _""Usuario o contraseña incorrectos""_.
+# Al iniciar sesión exitosamente, el sistema debe redirigir al usuario al panel (Dashboard) correspondiente a su rol.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i00076:v,SFGLD Sprint 3,,2.0,,,,Listo,04/abr/26 3:42 AM,10035,SFGLD-1,Accesos / IAM
+Arquitectura / Setup,SFGLD-7,10073,Epic,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 3:45 AM,22/mar/26 2:20 AM,22/mar/26 2:20 AM,,,0,"{panel:bgColor=#deebff}
+Proveer la infraestructura tecnológica, los pipelines de despliegue y los cimientos de calidad (NFRs) necesarios para que el código del MVP sea estable, auditable y fácil de evolucionar hacia el TP Principal.
+{panel}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,grey,0|i0002f:,,,,,,,Por hacer,21/mar/26 3:45 AM,,,
+Machine Learning,SFGLD-6,10072,Epic,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 1:22 AM,21/mar/26 4:32 AM,21/mar/26 4:32 AM,,,0,"{panel:bgColor=#deebff}
+Optimizar la logística de la sucursal integrando un modelo de Machine Learning que sugiera de forma automática el nivel de urgencia de los envíos para agilizar el despacho.
+{panel}
+
+*Definition of Ready (DoR)*
+
+{quote}Dataset histórico preparado, preprocesado y métricas objetivo de precisión del modelo definidas.{quote}
+
+*Definition of Done (DoD)*
+
+{quote}El modelo entrenado devuelve predicciones válidas de prioridad que se integran a la vista del Supervisor, permitiendo anular o filtrar dichos resultados sin fallas técnicas.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,orange,0|i00027:,,,,,,,Por hacer,21/mar/26 1:22 AM,,,
+Compliance / Ley,SFGLD-5,10071,Epic,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 1:22 AM,21/mar/26 4:32 AM,21/mar/26 4:32 AM,,,0,"{panel:bgColor=#deebff}
+Adecuar el sistema LogiTrack a la legislación nacional vigente sobre protección de datos personales, garantizando los derechos de los ciudadanos sobre su información.
+{panel}
+
+*Definition of Ready (DoR)*
+
+{quote}Textos legales de consentimiento redactados y alcance funcional de la anonimización validado.{quote}
+
+*Definition of Done (DoD)*
+
+{quote}El sistema registra explícitamente el consentimiento y cuenta con herramientas operativas para exportar o anonimizar datos de forma irreversible a pedido{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,yellow,0|i0001z:,,,,,,,Por hacer,21/mar/26 1:22 AM,,,
+Auditoría / Estados,SFGLD-4,10070,Epic,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 1:20 AM,21/mar/26 4:32 AM,21/mar/26 4:31 AM,,,0,"{panel:bgColor=#deebff}
+Asegurar que el ciclo de vida del paquete avance de forma controlada a través de sus estados permitidos, manteniendo un historial inmutable que garantice la transparencia de la operación logística.
+{panel}
+
+*Definition of Ready (DoR)*
+
+{quote}Diagrama de máquina de estados del envío aprobado y reglas de transición documentadas.{quote}
+
+*Definition of Done (DoD)*
+
+{quote}Es posible actualizar el estado de los envíos (individual/masivo) y el sistema genera automáticamente un registro histórico auditable (fecha, hora, usuario).{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,teal,0|i0001r:,,,,,,,Por hacer,21/mar/26 1:20 AM,,,
+Tracking,SFGLD-3,10069,Epic,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 1:20 AM,22/mar/26 9:03 PM,22/mar/26 9:03 PM,,,0,"{panel:bgColor=#deebff}
+Permitir a los usuarios localizar y auditar rápidamente la información de cualquier paquete dentro del sistema para responder a consultas operativas o gestionar su carga de trabajo diaria.
+{panel}
+
+*Definition of Ready (DoR)* 
+
+{quote}Filtros requeridos definidos y mockups de la interfaz de listado/detalle aprobados.{quote}
+
+*Definition of Done (DoD)*
+
+{quote}La interfaz retorna resultados exactos y filtrados en tiempo real, mostrando el detalle completo y legible del paquete seleccionado.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,green,0|i00013:,,16/mar/26 12:00 AM,,,,,Por hacer,21/mar/26 1:20 AM,,,
+Ingreso de Envíos,SFGLD-2,10068,Epic,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,21/mar/26 1:19 AM,21/mar/26 4:33 AM,22/mar/26 9:56 PM,,,0,"{panel:bgColor=#deebff}
+Proveer a los Operadores las herramientas necesarias para digitalizar el ingreso de paquetes al sistema (individual o masivo), generando identificadores únicos para iniciar el ciclo logístico con datos limpios.
+{panel}
+
+*Definition of Ready (DoR)*
+
+{quote}Estructura de datos requerida para un envío definida (campos obligatorios) y esquema de validación aprobado.{quote}
+
+*Definition of Done (DoD)*
+
+{quote}Los envíos se persisten correctamente en la base de datos simulada con su Tracking ID generado, sin errores de consistencia.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,blue,0|i0000v:,,,,,,,Por hacer,21/mar/26 1:19 AM,,,
+Accesos / IAM,SFGLD-1,10035,Epic,Tareas por hacer,SFGLD,LogiTrack (SFGLD) - Grupo 10,software,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,Medium,,,,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,20/mar/26 9:08 PM,21/mar/26 4:33 AM,22/mar/26 5:44 PM,,,0,"{panel:bgColor=#deebff}
+Garantizar que solo el personal autorizado acceda a la plataforma, delimitando de forma segura las acciones permitidas según su rol (Operador, Supervisor o Administrador).
+{panel}
+
+*Definition of Ready (DoR)*
+
+{quote}Matriz de roles y permisos documentada y aprobada.{quote}
+
+*Definition of Done (DoD)*
+
+{quote}El sistema permite iniciar/cerrar sesión de forma segura y restringe las vistas exclusivas de cada rol, validado en las pruebas de seguridad.{quote}",,Thiago Vildosa,712020:8a11661d-b390-4b03-a931-15b3334bf5bb,,,,,,,,,,0|i0000n:,,,,,,,Por hacer,20/mar/26 9:08 PM,,,
