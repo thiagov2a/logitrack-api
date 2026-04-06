@@ -111,6 +111,28 @@
             </div>
         </div>
 
+        <!-- Panel Supervisor — Cambio de prioridad manual -->
+        {% if es_supervisor %}
+        <div class="bg-purple-50 border border-purple-200 rounded-xl p-6">
+            <h2 class="text-sm font-semibold text-purple-800 uppercase tracking-wider mb-4">🤖 Panel Supervisor — Cambio de prioridad manual</h2>
+            <form method="post" action="/envios/{{ envio.trackingId }}/prioridad" class="flex flex-wrap gap-4 items-end">
+                <input type="hidden" name="rol" value="supervisor">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600 mb-1">Prioridad actual</label>
+                    <select name="nueva_prioridad" class="border border-purple-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-purple-400">
+                        <option value="ALTA" {% if envio.prioridad_ml and envio.prioridad_ml|string|upper == 'ALTA' %}selected{% endif %}>🔴 Alta</option>
+                        <option value="MEDIA" {% if envio.prioridad_ml and envio.prioridad_ml|string|upper == 'MEDIA' %}selected{% endif %}>🟡 Media</option>
+                        <option value="BAJA" {% if not envio.prioridad_ml or envio.prioridad_ml|string|upper == 'BAJA' %}selected{% endif %}>🟢 Baja</option>
+                    </select>
+                </div>
+                <button type="submit" class="bg-purple-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 transition">
+                    Confirmar cambio
+                </button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Panel Supervisor -->
         <!-- Panel Operador — Editar datos del envío -->
         {% if es_operador %}
         <div class="bg-blue-50 border border-blue-200 rounded-xl p-6">
