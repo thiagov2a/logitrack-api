@@ -57,3 +57,27 @@ def editar_usuario_api(email: str, datos: UsuarioUpdate, x_rol: str = Header(...
     return {"mensaje": "Usuario actualizado con exito", "usuario": {
         "email": usuario.email, "nombre": usuario.nombre, "rol": usuario.rol, "activo": usuario.activo
     }}
+
+
+# US-06: Baja logica de usuario
+@router.patch("/{email}/desactivar")
+def desactivar_usuario_api(email: str, x_rol: str = Header(...)):
+    """US-06: Desactiva un usuario (activo=false). No lo elimina. Solo Administrador."""
+    _solo_admin_api(x_rol)
+    usuario = _buscar_usuario(email)
+    if not usuario.activo:
+        raise HTTPException(status_code=400, detail="El usuario ya se encuentra inactivo.")
+    usuario.activo = False
+    return {"mensaje": "Usuario desactivado con exito", "email": email, "activo": False}
+
+
+# US-06: Reactivar usuario
+@router.patch("/{email}/activar")
+def activar_usuario_api(email: str, x_rol: str = Header(...)):
+    """US-06: Reactiva un usuario inactivo. Solo Administrador."""
+    _solo_admin_api(x_rol)
+    usuario = _buscar_usuario(email)
+    if usuario.activo:
+        raise HTTPException(status_code=400, detail="El usuario ya se encuentra activo.")
+    usuario.activo = True
+    return {"mensaje": "Usuario activado con exito", "email": email, "activo": True}

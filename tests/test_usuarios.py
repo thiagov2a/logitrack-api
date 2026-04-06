@@ -160,3 +160,93 @@ def test_editar_usuario_form_nombre_corto_muestra_error(client_admin):
     }, follow_redirects=True)
     assert response.status_code == 200
     assert "al menos 2 caracteres" in response.text
+
+
+# --- US-06: Baja lógica de usuario ---
+
+def test_desactivar_usuario_api_exitosamente(client):
+    response = client.patch("/api/usuarios/operador@logitrack.com/desactivar",
+                            headers={"x-rol": "administrador"})
+    assert response.status_code == 200
+    assert response.json()["activo"] is False
+    u = next(u for u in auth_module.mock_usuarios if u.email == "operador@logitrack.com")
+    assert u.activo is False
+
+
+def test_desactivar_usuario_api_con_rol_invalido_retorna_403(client):
+    response = client.patch("/api/usuarios/operador@logitrack.com/desactivar",
+                            headers={"x-rol": "supervisor"})
+    assert response.status_code == 403
+
+
+def test_desactivar_usuario_api_inexistente_retorna_404(client):
+    response = client.patch("/api/usuarios/noexiste@logitrack.com/desactivar",
+                            headers={"x-rol": "administrador"})
+    assert response.status_code == 404
+
+
+def test_desactivar_usuario_ya_inactivo_retorna_400(client):
+    client.patch("/api/usuarios/operador@logitrack.com/desactivar", headers={"x-rol": "administrador"})
+    response = client.patch("/api/usuarios/operador@logitrack.com/desactivar",
+                            headers={"x-rol": "administrador"})
+    assert response.status_code == 400
+    assert "ya se encuentra inactivo" in response.json()["detail"]
+
+
+def test_usuario_inactivo_no_puede_iniciar_sesion(client):
+    client.patch("/api/usuarios/operador@logitrack.com/desactivar", headers={"x-rol": "administrador"})
+    response = client.post("/login", data={"email": "operador@logitrack.com", "password": "operador123"},
+                           follow_redirects=True)
+    assert response.status_code == 200
+    assert "Usuario o contraseña incorrectos" in response.text
+
+
+def test_activar_usuario_inactivo_exitosamente(client):
+    client.patch("/api/usuarios/operador@logitrack.com/desactivar", headers={"x-rol": "administrador"})
+    response = client.patch("/api/usuarios/operador@logitrack.com/activar",
+                            headers={"x-rol": "administrador"})
+    assert response.status_code == 200
+    assert response.json()["activo"] is True
+    u = next(u for u in auth_module.mock_usuarios if u.email == "operador@logitrack.com")
+    assert u.activo is True
+
+
+def test_activar_usuario_ya_activo_retorna_400(client):
+    response = client.patch("/api/usuarios/operador@logitrack.com/activar",
+                            headers={"x-rol": "administrador"})
+    assert response.status_code == 400
+    assert "ya se encuentra activo" in response.json()["detail"]
+
+
+def test_desactivar_usuario_form_admin_exitosamente(client_admin):
+    response = client_admin.post("/usuarios/operador@logitrack.com/desactivar",
+                                 follow_redirects=False)
+    assert response.status_code == 303
+    u = next(u for u in auth_module.mock_usuarios if u.email == "operador@logitrack.com")
+    assert u.activo is False
+
+
+def test_desactivar_usuario_form_propio_usuario_no_permitido(client_admin):
+    response = client_admin.post("/usuarios/admin@logitrack.com/desactivar",
+                                 follow_redirects=False)
+    assert response.status_code == 303
+    assert "error" in response.headers["location"]
+    u = next(u for u in auth_module.mock_usuarios if u.email == "admin@logitrack.com")
+    assert u.activo is True
+
+
+def test_activar_usuario_form_admin_exitosamente(client_admin):
+    client_admin.post("/usuarios/operador@logitrack.com/desactivar")
+    response = client_admin.post("/usuarios/operador@logitrack.com/activar",
+                                 follow_redirects=False)
+    assert response.status_code == 303
+    u = next(u for u in auth_module.mock_usuarios if u.email == "operador@logitrack.com")
+    assert u.activo is True
+
+
+def test_desactivar_usuario_form_sin_ser_admin_redirige(client_operador):
+    response = client_operador.post("/usuarios/supervisor@logitrack.com/desactivar",
+                                    follow_redirects=False)
+    assert response.status_code == 303
+    u = next(u for u in auth_module.mock_usuarios if u.email == "supervisor@logitrack.com")
+    assert u.activo is True

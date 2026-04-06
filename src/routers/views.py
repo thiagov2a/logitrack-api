@@ -409,7 +409,9 @@ def vista_usuarios(request: Request):
     if not usuario or usuario.rol != "administrador":
         return RedirectResponse(url="/", status_code=303)
     success = request.query_params.get("success")
-    return _render("usuarios.html", request, usuarios=mock_usuarios, usuario=usuario, rol=usuario.rol, success=success)
+    error = request.query_params.get("error")
+    return _render("usuarios.html", request, usuarios=mock_usuarios, usuario=usuario,
+                   rol=usuario.rol, success=success, error=error)
 
 
 # --- US-03: Alta de usuario (vista HTML) ---
@@ -450,8 +452,7 @@ def vista_editar_usuario(request: Request, email: str):
     usuario = get_usuario_actual(request)
     if not usuario or usuario.rol != "administrador":
         return RedirectResponse(url="/", status_code=303)
-    from src.routers.auth import mock_usuarios as mu
-    target = next((u for u in mu if u.email == email), None)
+    target = next((u for u in mock_usuarios if u.email == email), None)
     if not target:
         return RedirectResponse(url="/usuarios/", status_code=303)
     return _render("editar_usuario.html", request, target=target, error=None, usuario=usuario, rol=usuario.rol)
@@ -467,11 +468,9 @@ def editar_usuario_form(
     usuario = get_usuario_actual(request)
     if not usuario or usuario.rol != "administrador":
         return RedirectResponse(url="/", status_code=303)
-    from src.routers.auth import mock_usuarios as mu
-    target = next((u for u in mu if u.email == email), None)
+    target = next((u for u in mock_usuarios if u.email == email), None)
     if not target:
         return RedirectResponse(url="/usuarios/", status_code=303)
-
     roles_validos = ["operador", "supervisor", "administrador"]
     if len(nombre.strip()) < 2:
         return _render("editar_usuario.html", request, target=target,
@@ -479,7 +478,34 @@ def editar_usuario_form(
     if rol_nuevo.lower() not in roles_validos:
         return _render("editar_usuario.html", request, target=target,
                        error="Rol inválido.", usuario=usuario, rol=usuario.rol)
-
     target.nombre = nombre.strip()
     target.rol = rol_nuevo.lower()
     return RedirectResponse(url="/usuarios/?success=Usuario+actualizado+correctamente", status_code=303)
+
+
+# --- US-06: Desactivar usuario (vista HTML) ---
+@router.post("/usuarios/{email}/desactivar")
+def desactivar_usuario_form(request: Request, email: str):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+    if email == usuario.email:
+        return RedirectResponse(url="/usuarios/?error=No+puedes+desactivar+tu+propio+usuario", status_code=303)
+    target = next((u for u in mock_usuarios if u.email == email), None)
+    if not target or not target.activo:
+        return RedirectResponse(url="/usuarios/?error=Usuario+no+encontrado+o+ya+inactivo", status_code=303)
+    target.activo = False
+    return RedirectResponse(url="/usuarios/?success=Usuario+desactivado+correctamente", status_code=303)
+
+
+# --- US-06: Activar usuario (vista HTML) ---
+@router.post("/usuarios/{email}/activar")
+def activar_usuario_form(request: Request, email: str):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+    target = next((u for u in mock_usuarios if u.email == email), None)
+    if not target or target.activo:
+        return RedirectResponse(url="/usuarios/?error=Usuario+no+encontrado+o+ya+activo", status_code=303)
+    target.activo = True
+    return RedirectResponse(url="/usuarios/?success=Usuario+activado+correctamente", status_code=303)

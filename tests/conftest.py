@@ -10,9 +10,9 @@ from src.models.enums import EstadoEnvio
 from src.models.usuario import Usuario
 
 USUARIOS_INICIALES = [
-    Usuario(email="operador@logitrack.com", password="operador123", nombre="Juan Pérez", rol="operador"),
-    Usuario(email="supervisor@logitrack.com", password="supervisor123", nombre="María López", rol="supervisor"),
-    Usuario(email="admin@logitrack.com", password="admin123", nombre="Carlos García", rol="administrador"),
+    Usuario(email="operador@logitrack.com", password="operador123", nombre="Juan Perez", rol="operador"),
+    Usuario(email="supervisor@logitrack.com", password="supervisor123", nombre="Maria Lopez", rol="supervisor"),
+    Usuario(email="admin@logitrack.com", password="admin123", nombre="Carlos Garcia", rol="administrador"),
 ]
 
 
