@@ -80,7 +80,8 @@ def vista_nuevo_envio(request: Request, error: Optional[str] = None, success: Op
     usuario = get_usuario_actual(request)
     if not usuario:
         return RedirectResponse(url="/login", status_code=303)
-    return _render("nuevo_envio.html", request, error=error, success=success, rol=usuario.rol, usuario=usuario, datos={})
+    return _render("nuevo_envio.html", request, error=error,
+                    success=success, rol=usuario.rol, usuario=usuario, datos={})
 
 
 @router.post("/envios/nuevo")
