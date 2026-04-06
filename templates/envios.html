@@ -174,8 +174,9 @@
                     <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Estado
                     </th>
-                    <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                        Prioridad
+                    <th id="th-prioridad" onclick="ordenarPorPrioridad()"
+                        class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider cursor-pointer select-none hover:text-gray-800 transition">
+                        Prioridad <span id="flecha-prioridad" class="ml-1 text-gray-400">↕</span>
                     </th>
                     <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         Fecha
@@ -305,5 +306,47 @@
     </a>
 </div>
 {% endif %}
+<script>
+    const ORDEN_PRIORIDAD = { "ALTA": 3, "MEDIA": 2, "BAJA": 1, "": 0 };
+    let direccion = 0; // 0=sin orden, 1=asc, -1=desc
+    let filasOriginal = null;
+
+    function getPrioridad(fila) {
+        const tds = fila.querySelectorAll("td");
+        for (const td of tds) {
+            const t = td.textContent.trim().toUpperCase();
+            if (t.includes("ALTA")) return "ALTA";
+            if (t.includes("MEDIA")) return "MEDIA";
+            if (t.includes("BAJA")) return "BAJA";
+        }
+        return "";
+    }
+
+    function ordenarPorPrioridad() {
+        const tbody = document.querySelector("tbody");
+        const flecha = document.getElementById("flecha-prioridad");
+
+        if (filasOriginal === null) {
+            filasOriginal = Array.from(tbody.querySelectorAll("tr")).map(f => f.cloneNode(true));
+        }
+
+        direccion = direccion === 1 ? -1 : direccion === -1 ? 0 : 1;
+
+        if (direccion === 0) {
+            flecha.textContent = "↕";
+            tbody.innerHTML = "";
+            filasOriginal.forEach(f => tbody.appendChild(f.cloneNode(true)));
+            return;
+        }
+
+        flecha.textContent = direccion === 1 ? "↑" : "↓";
+
+        const filas = Array.from(tbody.querySelectorAll("tr"));
+        filas.sort((a, b) =>
+            direccion * (ORDEN_PRIORIDAD[getPrioridad(a)] - ORDEN_PRIORIDAD[getPrioridad(b)])
+        );
+        filas.forEach(f => tbody.appendChild(f));
+    }
+</script>
 
 {% endblock %}

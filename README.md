@@ -41,16 +41,16 @@ LogiTrack es el **Paquete Base** del Sistema Federal de Gestión de Logística y
 │       └── ci.yml              # Pipeline de CI (linter + tests)
 ├── analysis/
 │   ├── dataset_envios_ml.csv   # Dataset de entrenamiento
-│   ├── entrenar_modelo.py      # Script de entrenamiento
-│   ├── imputer.pkl             # Imputer serializado
-│   └── modelo_prioridad.pkl    # Modelo Random Forest serializado
+│   └── entrenar_modelo.py      # Script de entrenamiento
 ├── docs/
 │   ├── TRAZABILIDAD.md         # Matriz Historia ↔ Test ↔ Commit
 │   ├── ADRs.md                 # Decisiones de arquitectura
 │   └── NFRs.md                 # Atributos de calidad
 ├── src/
 │   ├── ml/
-│   │   └── predictor.py        # Módulo de predicción de prioridad
+│   │   ├── predictor.py        # Módulo de predicción de prioridad
+│   │   ├── imputer.pkl             # Imputer serializado
+│   │   └── modelo_prioridad.pkl    # Modelo Random Forest serializado
 │   ├── models/
 │   │   ├── envio.py
 │   │   ├── cliente.py
