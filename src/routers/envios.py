@@ -264,7 +264,7 @@ def cambiar_estado_masivo(
         if _es_estado_terminal(estado_actual):
             omitidos.append({
                 "trackingId": tracking_id,
-                "motivo": f"El envio esta en estado terminal ({estado_actual.value}) y no puede cambiar de estado."
+                "motivo": f"El envio esta en estado terminal ({estado_actual.value}) y no puede cambiar de estado.",
             })
             continue
 
@@ -358,7 +358,11 @@ def cambiar_prioridad(tracking_id: str, body: CambioPrioridadRequest, x_rol: str
         raise HTTPException(status_code=403, detail="Acceso denegado: se requiere rol Supervisor.")
     envio = _buscar_envio(tracking_id)
     envio.prioridad_ml = body.nueva_prioridad
-    return {"mensaje": "Prioridad actualizada con exito", "trackingId": tracking_id, "prioridad_ml": body.nueva_prioridad}
+    return {
+        "mensaje": "Prioridad actualizada con exito",
+        "trackingId": tracking_id,
+        "prioridad_ml": body.nueva_prioridad
+    }
 
 
 # US-09: Editar datos del envio en estado INICIADO
