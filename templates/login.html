@@ -27,12 +27,12 @@
             <form method="post" action="/login" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                    <input type="email" name="email" required placeholder="Ej: operador@logitrack.com"
+                    <input type="email" name="email" id="input-email" required placeholder="Ej: operador@logitrack.com"
                         class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                    <input type="password" name="password" required placeholder="••••••••"
+                    <input type="password" name="password" id="input-password" required placeholder="••••••••"
                         class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50">
                 </div>
                 <button type="submit"
@@ -42,15 +42,31 @@
             </form>
 
             <div class="mt-6 border-t border-gray-100 pt-4">
-                <p class="text-xs text-gray-400 text-center mb-2">Usuarios de prueba:</p>
-                <div class="space-y-1 text-xs text-gray-500">
-                    <p>👤 <span class="font-mono">operador@logitrack.com</span> / operador123</p>
-                    <p>🔑 <span class="font-mono">supervisor@logitrack.com</span> / supervisor123</p>
-                    <p>⚙️ <span class="font-mono">admin@logitrack.com</span> / admin123</p>
+                <p class="text-xs text-gray-400 text-center mb-3">Acceso rápido con usuario de prueba:</p>
+                <div class="flex gap-2 justify-center">
+                    <button type="button" onclick="autocompletar('operador@logitrack.com', 'operador123')"
+                        class="flex-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-600 px-3 py-2 rounded-lg transition font-medium">
+                        👤 Operador
+                    </button>
+                    <button type="button" onclick="autocompletar('supervisor@logitrack.com', 'supervisor123')"
+                        class="flex-1 text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-2 rounded-lg transition font-medium">
+                        🔑 Supervisor
+                    </button>
+                    <button type="button" onclick="autocompletar('admin@logitrack.com', 'admin123')"
+                        class="flex-1 text-xs bg-purple-50 hover:bg-purple-100 text-purple-700 px-3 py-2 rounded-lg transition font-medium">
+                        ⚙️ Admin
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        function autocompletar(email, password) {
+            document.getElementById('input-email').value = email;
+            document.getElementById('input-password').value = password;
+        }
+    </script>
 
 </body>
 </html>

@@ -36,6 +36,10 @@ def vista_listado(
     nuevo_estado: Optional[str] = None,
     ubicacion: Optional[str] = None,
     observaciones: Optional[str] = None,
+    busqueda: Optional[str] = None,
+    orden_prioridad: Optional[str] = None,
+    page: int = 1,
+    limit: int = 10,
 ):
     usuario = get_usuario_actual(request)
     if not usuario:
@@ -43,6 +47,10 @@ def vista_listado(
     from datetime import datetime
 
     resultado = list(mock_db_envios)
+
+    if busqueda:
+        q = busqueda.strip().upper()
+        resultado = [e for e in resultado if e.trackingId and q in e.trackingId.upper()]
 
     if estado:
         resultado = [
@@ -58,20 +66,57 @@ def vista_listado(
         dt_hasta = datetime.strptime(fecha_hasta, "%Y-%m-%d").replace(hour=23, minute=59, second=59)
         resultado = [e for e in resultado if e.fechaCreacion <= dt_hasta]
 
+    ORDEN = {"ALTA": 3, "MEDIA": 2, "BAJA": 1, None: 0}
+    if orden_prioridad == "asc":
+        resultado = sorted(resultado, key=lambda e: ORDEN.get(
+            str(e.prioridad_ml).split(".")[-1] if e.prioridad_ml else None, 0
+        ))
+    elif orden_prioridad == "desc":
+        resultado = sorted(resultado, key=lambda e: ORDEN.get(
+            str(e.prioridad_ml).split(".")[-1] if e.prioridad_ml else None, 0
+        ), reverse=True)
+
+    total = len(resultado)
+    total_pages = max(1, (total + limit - 1) // limit)
+    page = max(1, min(page, total_pages))
+    offset = (page - 1) * limit
+    resultado_paginado = resultado[offset:offset + limit]
+
+    filtros_activos = any([busqueda, estado, fecha_desde, fecha_hasta])
+    aviso_sin_resultados = None
+    if filtros_activos and total == 0:
+        partes = []
+        if busqueda:
+            partes.append(f"Tracking ID contiene '{busqueda}'")
+        if estado:
+            partes.append(f"estado '{estado}'")
+        if fecha_desde:
+            partes.append(f"desde {fecha_desde}")
+        if fecha_hasta:
+            partes.append(f"hasta {fecha_hasta}")
+        aviso_sin_resultados = "No se encontraron envíos con los filtros: " + ", ".join(partes) + "."
+
     return _render(
         "envios.html",
         request,
-        envios=resultado,
+        envios=resultado_paginado,
         estado_filtro=estado,
         fecha_desde=fecha_desde,
         fecha_hasta=fecha_hasta,
+        busqueda=busqueda or "",
         rol=usuario.rol,
         usuario=usuario,
         error=error,
         success=success,
+        aviso_sin_resultados=aviso_sin_resultados,
+        orden_prioridad=orden_prioridad or "",
         nuevo_estado=nuevo_estado,
         ubicacion=ubicacion,
         observaciones=observaciones,
+        page=page,
+        total_pages=total_pages,
+        total=total,
+        limit=limit,
     )
 
 
@@ -196,9 +241,14 @@ def cambiar_prioridad_form(
     nueva_prioridad: str = Form(...),
 ):
     usuario = get_usuario_actual(request)
-    if not usuario or usuario.rol != "supervisor":
+    if not usuario or usuario.rol not in ["supervisor", "administrador"]:
         raise HTTPException(status_code=403, detail="Acceso denegado: solo el Supervisor puede cambiar la prioridad.")
     envio = _buscar_envio(tracking_id)
+    if _estado_actual(envio) in ESTADOS_TERMINALES:
+        return RedirectResponse(
+            url=f"/envios/{tracking_id}?error=No+se+puede+cambiar+la+prioridad+de+un+envio+finalizado",
+            status_code=303
+        )
     envio.prioridad_ml = PrioridadEnvio(nueva_prioridad)
     return RedirectResponse(url=f"/envios/{tracking_id}?success=Prioridad+actualizada+correctamente", status_code=303)
 
@@ -217,7 +267,7 @@ def editar_envio_form(
     consentimiento: Optional[str] = Form(None),
 ):
     usuario = get_usuario_actual(request)
-    if not usuario or usuario.rol != "operador":
+    if not usuario or usuario.rol not in ["operador", "supervisor", "administrador"]:
         raise HTTPException(status_code=403, detail="Acceso denegado: solo el Operador puede editar el envío.")
 
     envio = _buscar_envio(tracking_id)
@@ -253,7 +303,7 @@ def cancelar_envio_form(
     confirmar: Optional[str] = Form(None),
 ):
     usuario = get_usuario_actual(request)
-    if not usuario or usuario.rol != "operador":
+    if not usuario or usuario.rol not in ["operador", "supervisor", "administrador"]:
         raise HTTPException(status_code=403, detail="Acceso denegado: solo el Operador puede cancelar el envío.")
 
     if confirmar != "on":
@@ -283,7 +333,7 @@ def cambiar_estado_form(
     observaciones: Optional[str] = Form(None),
 ):
     usuario = get_usuario_actual(request)
-    if not usuario or usuario.rol != "supervisor":
+    if not usuario or usuario.rol not in ["supervisor", "administrador"]:
         raise HTTPException(status_code=403, detail="Acceso denegado: solo el Supervisor puede cambiar estados.")
 
     envio = _buscar_envio(tracking_id)
@@ -305,6 +355,26 @@ def cambiar_estado_form(
 
 
 # --- Cambio masivo de estado desde HTML ---
+@router.post("/envios/cambio-masivo/confirmar")
+async def confirmar_cambio_masivo_form(request: Request):
+    """Recibe los tracking_ids seleccionados y muestra la página de confirmación."""
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol not in ["supervisor", "administrador"]:
+        return RedirectResponse(url="/?error=Acceso+denegado", status_code=303)
+    form = await request.form()
+    tracking_ids = form.getlist("tracking_ids")
+    if not tracking_ids:
+        return RedirectResponse(url="/?error=No+se+selecciono+ningun+envio", status_code=303)
+    envios_sel = [e for e in mock_db_envios if e.trackingId in tracking_ids]
+    return _render(
+        "cambio_masivo.html", request,
+        envios=envios_sel,
+        tracking_ids=tracking_ids,
+        rol=usuario.rol,
+        usuario=usuario,
+    )
+
+
 @router.post("/envios/cambio-masivo")
 async def cambiar_estado_masivo_form(
     request: Request,
@@ -316,7 +386,7 @@ async def cambiar_estado_masivo_form(
     fecha_hasta: Optional[str] = Form(None),
 ):
     usuario = get_usuario_actual(request)
-    if not usuario or usuario.rol != "supervisor":
+    if not usuario or usuario.rol not in ["supervisor", "administrador"]:
         return RedirectResponse(url="/?error=Acceso+denegado", status_code=303)
 
     form = await request.form()
@@ -375,7 +445,7 @@ def anonimizar_envio_form(
     confirmar: Optional[str] = Form(None),
 ):
     usuario = get_usuario_actual(request)
-    if not usuario or usuario.rol != "supervisor":
+    if not usuario or usuario.rol not in ["supervisor", "administrador"]:
         raise HTTPException(status_code=403, detail="Acceso denegado: solo el Supervisor puede anonimizar.")
 
     if confirmar != "on":
@@ -447,14 +517,52 @@ def exportar_cliente_form(
 
 # --- US-04: Listado de usuarios (vista HTML) ---
 @router.get("/usuarios/", response_class=HTMLResponse)
-def vista_usuarios(request: Request):
+def vista_usuarios(
+    request: Request,
+    rol_filtro: Optional[str] = None,
+    estado_filtro: Optional[str] = None,
+    busqueda: Optional[str] = None,
+    page: int = 1,
+    limit: int = 10,
+):
     usuario = get_usuario_actual(request)
     if not usuario or usuario.rol != "administrador":
         return RedirectResponse(url="/", status_code=303)
     success = request.query_params.get("success")
     error = request.query_params.get("error")
-    return _render("usuarios.html", request, usuarios=mock_usuarios, usuario=usuario,
-                   rol=usuario.rol, success=success, error=error)
+
+    resultado = list(mock_usuarios)
+
+    if rol_filtro:
+        resultado = [u for u in resultado if u.rol == rol_filtro]
+    if estado_filtro == "activo":
+        resultado = [u for u in resultado if u.activo]
+    elif estado_filtro == "inactivo":
+        resultado = [u for u in resultado if not u.activo]
+    if busqueda:
+        q = busqueda.lower()
+        resultado = [u for u in resultado if q in u.nombre.lower() or q in u.email.lower()]
+
+    total = len(resultado)
+    total_pages = max(1, (total + limit - 1) // limit)
+    page = max(1, min(page, total_pages))
+    offset = (page - 1) * limit
+
+    return _render(
+        "usuarios.html", request,
+        usuarios=resultado[offset:offset + limit],
+        usuario=usuario,
+        rol=usuario.rol,
+        success=success,
+        error=error,
+        rol_filtro=rol_filtro,
+        estado_filtro=estado_filtro,
+        busqueda=busqueda or "",
+        page=page,
+        total_pages=total_pages,
+        total=total,
+        limit=limit,
+    )
 
 
 # --- US-03: Alta de usuario (vista HTML) ---
