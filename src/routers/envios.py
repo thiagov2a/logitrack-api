@@ -89,6 +89,7 @@ def _es_estado_terminal(estado: EstadoEnvio) -> bool:
 def _esta_finalizado(envio: Envio) -> bool:
     return _estado_actual(envio) in [EstadoEnvio.ENTREGADO, EstadoEnvio.CANCELADO]
 
+
 def _cliente_tiene_datos(cliente) -> bool:
     if not cliente:
         return False
@@ -482,7 +483,7 @@ def exportar_datos_cliente(
         raise HTTPException(
             status_code=404,
             detail=f"El envio no tiene {tipo_normalizado} registrado."
-    )
+        )
 
     output = io.StringIO()
     writer = csv.writer(
