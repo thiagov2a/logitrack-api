@@ -8,7 +8,7 @@ from src.routers.auth import get_usuario_actual
 from src.models.envio import Envio
 from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
-from src.models.enums import EstadoEnvio
+from src.models.enums import EstadoEnvio, PrioridadEnvio
 import uuid
 import io
 import csv
@@ -142,6 +142,21 @@ def vista_detalle(request: Request, tracking_id: str):
         return RedirectResponse(url="/login", status_code=303)
     envio = _buscar_envio(tracking_id)
     return _render("detalle.html", request, envio=envio, rol=usuario.rol, usuario=usuario)
+
+
+# --- Cambio de prioridad manual desde HTML ---
+@router.post("/envios/{tracking_id}/prioridad")
+def cambiar_prioridad_form(
+    tracking_id: str,
+    request: Request,
+    nueva_prioridad: str = Form(...),
+):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "supervisor":
+        raise HTTPException(status_code=403, detail="Acceso denegado: solo el Supervisor puede cambiar la prioridad.")
+    envio = _buscar_envio(tracking_id)
+    envio.prioridad_ml = PrioridadEnvio(nueva_prioridad)
+    return RedirectResponse(url=f"/envios/{tracking_id}?success=Prioridad+actualizada+correctamente", status_code=303)
 
 
 # --- Cambio individual de estado desde HTML ---
