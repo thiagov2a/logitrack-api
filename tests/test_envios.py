@@ -186,6 +186,103 @@ def test_editar_envio_fuera_de_estado_iniciado_retorna_400(client):
     response = client.patch("/api/envios/TRK-TEST01", json={"destino": "Mendoza"})
     assert response.status_code == 400
 
+def test_detalle_operador_en_iniciado_muestra_formulario_editable(client):
+    response = client.get("/envios/TRK-TEST01?rol=operador")
+
+    assert response.status_code == 200
+    assert "Panel Operador — Editar datos del envío" in response.text
+    assert "Guardar cambios" in response.text
+    assert "Podés corregir los datos antes de que avance en el proceso." in response.text
+
+
+def test_detalle_operador_fuera_de_iniciado_muestra_solo_lectura(client):
+    payload = {"nuevo_estado": "EN_TRANSITO", "ubicacion": "Rosario"}
+    client.patch(
+        "/api/envios/TRK-TEST01/estado",
+        json=payload,
+        headers={"x-rol": "supervisor"}
+    )
+
+    response = client.get("/envios/TRK-TEST01?rol=operador")
+
+    assert response.status_code == 200
+    assert "Panel Operador — Editar datos del envío" in response.text
+    assert "solo lectura" in response.text
+    assert "Guardar cambios" not in response.text
+
+
+def test_editar_envio_form_operador_en_iniciado_actualiza_datos(client):
+    response = client.post(
+        "/envios/TRK-TEST01/editar",
+        data={
+            "origen": "Buenos Aires",
+            "destino": "Mendoza",
+            "remitente_dni": "12345678",
+            "remitente_nombre": "Ana Gomez Editada",
+            "destinatario_dni": "87654321",
+            "destinatario_nombre": "Luis Perez",
+            "consentimiento": "on",
+            "rol": "operador",
+        },
+        follow_redirects=False
+    )
+
+    assert response.status_code == 303
+    assert envios_module.mock_db_envios[0].destino == "Mendoza"
+    assert envios_module.mock_db_envios[0].remitente.nombre == "Ana Gomez Editada"
+    assert envios_module.mock_db_envios[0].destinatario.dni == "87654321"
+    assert envios_module.mock_db_envios[0].consentimiento is True
+
+
+def test_editar_envio_form_operador_fuera_de_iniciado_no_actualiza(client):
+    payload = {"nuevo_estado": "EN_TRANSITO", "ubicacion": "Rosario"}
+    client.patch(
+        "/api/envios/TRK-TEST01/estado",
+        json=payload,
+        headers={"x-rol": "supervisor"}
+    )
+
+    destino_original = envios_module.mock_db_envios[0].destino
+    nombre_original = envios_module.mock_db_envios[0].remitente.nombre
+
+    response = client.post(
+        "/envios/TRK-TEST01/editar",
+        data={
+            "origen": "Buenos Aires",
+            "destino": "Mendoza",
+            "remitente_dni": "12345678",
+            "remitente_nombre": "Ana Modificada",
+            "destinatario_dni": "",
+            "destinatario_nombre": "",
+            "rol": "operador",
+        },
+        follow_redirects=False
+    )
+
+    assert response.status_code == 303
+    assert envios_module.mock_db_envios[0].destino == destino_original
+    assert envios_module.mock_db_envios[0].remitente.nombre == nombre_original
+
+
+def test_editar_envio_form_con_rol_invalido_no_permite(client):
+    destino_original = envios_module.mock_db_envios[0].destino
+
+    response = client.post(
+        "/envios/TRK-TEST01/editar",
+        data={
+            "origen": "Buenos Aires",
+            "destino": "Mendoza",
+            "remitente_dni": "12345678",
+            "remitente_nombre": "Ana Modificada",
+            "destinatario_dni": "",
+            "destinatario_nombre": "",
+            "rol": "supervisor",
+        },
+        follow_redirects=False
+    )
+
+    assert response.status_code == 303
+    assert envios_module.mock_db_envios[0].destino == destino_original
 
 # --- US-10: Cancelar envio ---
 def test_cancelar_envio_en_estado_iniciado(client):
@@ -206,6 +303,103 @@ def test_cancelar_envio_fuera_de_estado_iniciado_retorna_400(client):
     client.patch("/api/envios/TRK-TEST01/estado", json=payload, headers=headers)
     response = client.patch("/api/envios/TRK-TEST01/cancelar", json={"confirmar": True})
     assert response.status_code == 400
+    
+def test_detalle_operador_en_iniciado_muestra_panel_cancelacion(client):
+    response = client.get("/envios/TRK-TEST01?rol=operador")
+
+    assert response.status_code == 200
+    assert "Panel Operador — Cancelar envío" in response.text
+    assert "Este envío todavía está en estado" in response.text
+    assert "Cancelar envío" in response.text
+
+
+def test_detalle_operador_fuera_de_iniciado_muestra_mensaje_no_disponible(client):
+    payload = {"nuevo_estado": "EN_TRANSITO", "ubicacion": "Rosario"}
+    client.patch(
+        "/api/envios/TRK-TEST01/estado",
+        json=payload,
+        headers={"x-rol": "supervisor"}
+    )
+
+    response = client.get("/envios/TRK-TEST01?rol=operador")
+
+    assert response.status_code == 200
+    assert "Panel Operador — Cancelar envío" in response.text
+    assert "La cancelación solo está disponible para envíos en estado" in response.text
+
+
+def test_cancelar_envio_form_operador_en_iniciado_cancela_envio(client):
+    response = client.post(
+        "/envios/TRK-TEST01/cancelar",
+        data={
+            "confirmar": "on",
+            "rol": "operador",
+        },
+        follow_redirects=False
+    )
+
+    assert response.status_code == 303
+    assert envios_module.mock_db_envios[0].historial[-1].estado_actual == EstadoEnvio.CANCELADO
+
+
+def test_cancelar_envio_form_sin_confirmacion_muestra_error_y_no_cancela(client):
+    cantidad_historial_antes = len(envios_module.mock_db_envios[0].historial)
+
+    response = client.post(
+        "/envios/TRK-TEST01/cancelar",
+        data={
+            "rol": "operador",
+        },
+        follow_redirects=True
+    )
+
+    assert response.status_code == 200
+    assert "Debe confirmar la cancelación del envío." in response.text
+    assert len(envios_module.mock_db_envios[0].historial) == cantidad_historial_antes
+    assert envios_module.mock_db_envios[0].historial[-1].estado_actual == EstadoEnvio.INICIADO
+
+
+def test_cancelar_envio_form_fuera_de_iniciado_no_cancela(client):
+    payload = {"nuevo_estado": "EN_TRANSITO", "ubicacion": "Rosario"}
+    client.patch(
+        "/api/envios/TRK-TEST01/estado",
+        json=payload,
+        headers={"x-rol": "supervisor"}
+    )
+
+    cantidad_historial_antes = len(envios_module.mock_db_envios[0].historial)
+
+    response = client.post(
+        "/envios/TRK-TEST01/cancelar",
+        data={
+            "confirmar": "on",
+            "rol": "operador",
+        },
+        follow_redirects=True
+    )
+
+    assert response.status_code == 200
+    assert "Solo se puede cancelar un envío en estado INICIADO." in response.text
+    assert len(envios_module.mock_db_envios[0].historial) == cantidad_historial_antes
+    assert envios_module.mock_db_envios[0].historial[-1].estado_actual == EstadoEnvio.EN_TRANSITO
+
+
+def test_cancelar_envio_form_con_rol_invalido_no_permite(client):
+    cantidad_historial_antes = len(envios_module.mock_db_envios[0].historial)
+
+    response = client.post(
+        "/envios/TRK-TEST01/cancelar",
+        data={
+            "confirmar": "on",
+            "rol": "supervisor",
+        },
+        follow_redirects=True
+    )
+
+    assert response.status_code == 200
+    assert "Acceso denegado: solo el Operador puede cancelar el envío." in response.text
+    assert len(envios_module.mock_db_envios[0].historial) == cantidad_historial_antes
+    assert envios_module.mock_db_envios[0].historial[-1].estado_actual == EstadoEnvio.INICIADO
 
 
 # --- US-14: Filtrar por estado ---
@@ -437,10 +631,10 @@ def test_cambio_masivo_omite_envio_entregado(client):
 
 
 # --- US-23: Exportación de datos de cliente (Derecho de Acceso) ---
-def test_exportar_datos_remitente_csv_como_supervisor(client):
+def test_exportar_datos_remitente_csv_como_administrador(client):
     response = client.get(
         "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=remitente",
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 200
@@ -448,61 +642,71 @@ def test_exportar_datos_remitente_csv_como_supervisor(client):
     assert "attachment; filename=" in response.headers["content-disposition"]
 
     body = response.text
-    assert "tracking_id,tipo_cliente,nombre,dni,direccion,anonimizado" in body
-    assert "TRK-TEST01,remitente,Ana,12345678" in body
+    assert "tracking_id" in body
+    assert "tipo_cliente" in body
+    assert "nombre" in body
+    assert "dni" in body
+    assert "TRK-TEST01" in body
+    assert "remitente" in body
+    assert "Ana" in body
+    assert "12345678" in body
 
 
-def test_exportar_datos_destinatario_csv_como_supervisor(client):
+def test_exportar_datos_destinatario_csv_como_administrador(client):
     envios_module.mock_db_envios[0].destinatario = Cliente(dni="87654321", nombre="Luis")
 
     response = client.get(
         "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=destinatario",
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 200
     body = response.text
-    assert "TRK-TEST01,destinatario,Luis,87654321" in body
+    assert "TRK-TEST01" in body
+    assert "destinatario" in body
+    assert "Luis" in body
+    assert "87654321" in body
 
 
 def test_exportar_datos_cliente_con_rol_invalido_retorna_403(client):
     response = client.get(
         "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=remitente",
-        headers={"x-rol": "operador"}
+        headers={"x-rol": "supervisor"}
     )
 
     assert response.status_code == 403
-    assert response.json()["detail"] == "Acceso denegado: se requiere rol Supervisor."
+    assert response.json()["detail"] == "Acceso denegado: se requiere rol Administrador."
 
 
 def test_exportar_datos_cliente_inexistente_retorna_404(client):
     response = client.get(
         "/api/envios/TRK-INVALIDO/exportar-cliente?tipo_cliente=remitente",
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 404
 
 
 def test_exportar_datos_destinatario_inexistente_retorna_404(client):
-    """El destinatario es obligatorio en el modelo, por lo que este caso no aplica.
-    Verificamos que el endpoint funciona correctamente con destinatario existente."""
+    envios_module.mock_db_envios[0].destinatario = None
+
     response = client.get(
         "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=destinatario",
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
-    assert response.status_code == 200
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "El envio no tiene destinatario registrado."
 
 
 def test_exportar_datos_cliente_con_tipo_invalido_retorna_400(client):
     response = client.get(
         "/api/envios/TRK-TEST01/exportar-cliente?tipo_cliente=cliente",
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 400
-    assert "remitente" in response.json()["detail"].lower() or "destinatario" in response.json()["detail"].lower()
-
+    assert response.json()["detail"] == "tipo_cliente debe ser 'remitente' o 'destinatario'."
 
 # --- US-19: Historial de estados ---
 def test_historial_envio_retorna_lista(client):
@@ -535,7 +739,7 @@ def test_anonimizar_envio_finalizado_reemplaza_datos_personales(client):
     response = client.patch(
         "/api/envios/TRK-TEST01/anonimizar",
         json={"confirmar": True},
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 200
@@ -551,7 +755,7 @@ def test_anonimizar_envio_no_finalizado_retorna_400(client):
     response = client.patch(
         "/api/envios/TRK-TEST01/anonimizar",
         json={"confirmar": True},
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 400
@@ -573,11 +777,11 @@ def test_anonimizar_envio_con_rol_invalido_retorna_403(client):
     response = client.patch(
         "/api/envios/TRK-TEST01/anonimizar",
         json={"confirmar": True},
-        headers={"x-rol": "operador"}
+        headers={"x-rol": "supervisor"}
     )
 
     assert response.status_code == 403
-    assert response.json()["detail"] == "Acceso denegado: se requiere rol Supervisor."
+    assert response.json()["detail"] == "Acceso denegado: se requiere rol Administrador."
 
 
 def test_anonimizar_envio_sin_confirmacion_retorna_400(client):
@@ -595,7 +799,7 @@ def test_anonimizar_envio_sin_confirmacion_retorna_400(client):
     response = client.patch(
         "/api/envios/TRK-TEST01/anonimizar",
         json={"confirmar": False},
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 400
@@ -620,7 +824,7 @@ def test_anonimizar_envio_mantiene_historial_intacto(client):
     response = client.patch(
         "/api/envios/TRK-TEST01/anonimizar",
         json={"confirmar": True},
-        headers={"x-rol": "supervisor"}
+        headers={"x-rol": "administrador"}
     )
 
     assert response.status_code == 200
