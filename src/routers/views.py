@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 from urllib.parse import urlencode
-from src.routers.envios import mock_db_envios, _buscar_envio, _estado_actual, importar_envios_csv
+from src.routers.envios import mock_db_envios, _buscar_envio, _estado_actual, importar_envios_csv, _validar_transicion
 from src.routers.auth import get_usuario_actual, mock_usuarios
 from src.models.envio import Envio
 from src.models.cliente import Cliente
@@ -392,6 +392,9 @@ async def cambiar_estado_masivo_form(
         if not envio:
             continue
         if _estado_actual(envio) in ESTADOS_TERMINALES:
+            total_omitidos += 1
+            continue
+        if not _validar_transicion(_estado_actual(envio), estado_enum):
             total_omitidos += 1
             continue
         envio.historial.append(EventoTracking(

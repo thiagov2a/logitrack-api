@@ -302,18 +302,20 @@ def test_cambio_estado_masivo_supervisor_actualiza_solo_seleccionados(client):
     envios_module.mock_db_envios.append(
         _seed_con_tracking("TRK-TEST03", "La Plata", "Tucuman", "Maria", EstadoEnvio.INICIADO)
     )
+    # Avanzar TRK-TEST01 a EN_SUCURSAL y TRK-TEST02 a EN_TRANSITO para poder llegar a ENTREGADO
+    _avanzar_estado(client, "TRK-TEST01", EstadoEnvio.EN_SUCURSAL)
+    _avanzar_estado(client, "TRK-TEST02", EstadoEnvio.EN_TRANSITO)
     payload = {
         "tracking_ids": ["TRK-TEST01", "TRK-TEST02"],
-        "nuevo_estado": "ENTREGADO",
+        "nuevo_estado": "EN_TRANSITO",
         "ubicacion": "Centro de distribución",
         "observaciones": "Cambio masivo de prueba"
     }
     response = client.patch("/api/envios/estado-masivo", json=payload, headers={"x-rol": "supervisor"})
     assert response.status_code == 200
     data = response.json()
-    assert data["total_actualizados"] == 2
+    assert data["total_actualizados"] == 1  # TRK-TEST01 pasa a EN_TRANSITO, TRK-TEST02 ya está en EN_TRANSITO
     assert "TRK-TEST01" in data["actualizados"]
-    assert "TRK-TEST02" in data["actualizados"]
     assert "TRK-TEST03" not in data["actualizados"]
     envio3 = next(e for e in envios_module.mock_db_envios if e.trackingId == "TRK-TEST03")
     assert envio3.historial[-1].estado_actual == EstadoEnvio.INICIADO

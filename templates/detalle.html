@@ -228,10 +228,16 @@
                     <div>
                         <label class="block text-xs font-medium text-gray-600 mb-1">Nuevo estado</label>
                         <select name="nuevo_estado" class="w-full border border-amber-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-amber-400">
+                            {% if estado == "INICIADO" %}
                             <option value="EN_SUCURSAL">🟡 En Sucursal</option>
+                            <option value="CANCELADO">🔴 Cancelado</option>
+                            {% elif estado == "EN_SUCURSAL" %}
                             <option value="EN_TRANSITO">🟠 En Tránsito</option>
+                            <option value="CANCELADO">🔴 Cancelado</option>
+                            {% elif estado == "EN_TRANSITO" %}
                             <option value="ENTREGADO">🟢 Entregado</option>
                             <option value="CANCELADO">🔴 Cancelado</option>
+                            {% endif %}
                         </select>
                     </div>
                     <div>

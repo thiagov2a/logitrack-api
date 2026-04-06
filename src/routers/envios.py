@@ -461,6 +461,16 @@ def cambiar_estado_masivo(
             })
             continue
 
+        if not _validar_transicion(estado_actual, body.nuevo_estado):
+            omitidos.append({
+                "trackingId": tracking_id,
+                "motivo": (
+                    f"Transicion invalida: {estado_actual.value} → {body.nuevo_estado.value}. "
+                    f"El flujo correcto es INICIADO → EN_SUCURSAL → EN_TRANSITO → ENTREGADO."
+                ),
+            })
+            continue
+
         envio.historial.append(EventoTracking(
             trackingId=tracking_id,
             estado_actual=body.nuevo_estado,
