@@ -86,6 +86,23 @@ class EnvioDetalle(BaseModel):
 
 # --- Helpers ---
 
+FLUJO_ESTADOS = [
+    EstadoEnvio.INICIADO,
+    EstadoEnvio.EN_SUCURSAL,
+    EstadoEnvio.EN_TRANSITO,
+    EstadoEnvio.ENTREGADO,
+]
+
+
+def _validar_transicion(actual: EstadoEnvio, nuevo: EstadoEnvio) -> bool:
+    """Valida que la transicion respete el flujo logico. CANCELADO siempre permitido."""
+    if nuevo == EstadoEnvio.CANCELADO:
+        return True
+    if actual not in FLUJO_ESTADOS or nuevo not in FLUJO_ESTADOS:
+        return False
+    return FLUJO_ESTADOS.index(nuevo) == FLUJO_ESTADOS.index(actual) + 1
+
+
 ESTADOS_TERMINALES = [
     EstadoEnvio.ENTREGADO,
     EstadoEnvio.CANCELADO,
@@ -529,6 +546,15 @@ def cambiar_estado_envio(
             detail=f"El envio esta en estado terminal ({estado_actual.value}) y no puede cambiar de estado."
         )
 
+    if not _validar_transicion(estado_actual, body.nuevo_estado):
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Transicion invalida: {estado_actual.value} → {body.nuevo_estado.value}. "
+                f"El flujo correcto es INICIADO → EN_SUCURSAL → EN_TRANSITO → ENTREGADO."
+            )
+        )
+
     envio.historial.append(EventoTracking(
         trackingId=tracking_id,
         estado_actual=body.nuevo_estado,
@@ -551,6 +577,7 @@ def cambiar_prioridad(tracking_id: str, body: CambioPrioridadRequest, x_rol: str
         raise HTTPException(status_code=403, detail="Acceso denegado: se requiere rol Supervisor.")
     envio = _buscar_envio(tracking_id)
     envio.prioridad_ml = body.nueva_prioridad
+    envio.prioridadManual = True
     return {
         "mensaje": "Prioridad actualizada con exito",
         "trackingId": tracking_id,
@@ -623,10 +650,10 @@ def anonimizar_envio(
     x_rol: str = Header(...)
 ):
     """US-22: Anonimiza irreversiblemente los datos personales de un envio finalizado. Solo Supervisor."""
-    if x_rol.lower() != "supervisor":
+    if x_rol.lower() not in ["supervisor", "administrador"]:
         raise HTTPException(
             status_code=403,
-            detail="Acceso denegado: se requiere rol Supervisor."
+            detail="Acceso denegado: se requiere rol Supervisor o Administrador."
         )
 
     if not confirmacion.confirmar:

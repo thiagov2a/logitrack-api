@@ -67,6 +67,8 @@ def vista_listado(
         resultado = [e for e in resultado if e.fechaCreacion <= dt_hasta]
 
     ORDEN = {"ALTA": 3, "MEDIA": 2, "BAJA": 1, None: 0}
+    if not orden_prioridad and usuario.rol in ["supervisor", "administrador"]:
+        orden_prioridad = "desc"
     if orden_prioridad == "asc":
         resultado = sorted(resultado, key=lambda e: ORDEN.get(
             str(e.prioridad_ml).split(".")[-1] if e.prioridad_ml else None, 0
@@ -250,6 +252,7 @@ def cambiar_prioridad_form(
             status_code=303
         )
     envio.prioridad_ml = PrioridadEnvio(nueva_prioridad)
+    envio.prioridadManual = True
     return RedirectResponse(url=f"/envios/{tracking_id}?success=Prioridad+actualizada+correctamente", status_code=303)
 
 
@@ -350,6 +353,7 @@ def cambiar_estado_form(
         estado_actual=EstadoEnvio(nuevo_estado),
         ubicacion=ubicacion,
         observaciones=observaciones,
+        usuario=usuario.email,
     ))
     return RedirectResponse(url=f"/envios/{tracking_id}", status_code=303)
 
@@ -415,6 +419,7 @@ async def cambiar_estado_masivo_form(
             estado_actual=estado_enum,
             ubicacion=ubicacion,
             observaciones=observaciones or f"Cambio masivo realizado por {usuario.nombre}.",
+            usuario=usuario.email,
         ))
         total_actualizados += 1
 
