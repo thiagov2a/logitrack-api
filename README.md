@@ -26,8 +26,9 @@ LogiTrack es el **Paquete Base** del Sistema Federal de Gestión de Logística y
 | Pydantic | 2.x | Modelado y validación de datos |
 | Jinja2 | 3.x | Templates HTML |
 | Tailwind CSS | CDN | Estilos de la interfaz web |
-| scikit-learn | — | Modelo de ML (Random Forest) |
-| pandas | — | Procesamiento de datos para ML |
+| scikit-learn | 1.x | Modelo de ML (Random Forest) |
+| pandas | 2.x | Procesamiento de datos para ML |
+| bcrypt | 4.0.1 | Hasheo de contraseñas |
 | Pytest + HTTPX | — | Testing automatizado |
 | Flake8 | — | Linter |
 | GitHub Actions | — | Pipeline CI/CD |
@@ -102,25 +103,28 @@ uvicorn main:app --reload
 | Email | Contraseña | Rol |
 |---|---|---|
 | `operador@logitrack.com` | `operador123` | Operador |
+| `operador2@logitrack.com` | `operador123` | Operador |
 | `supervisor@logitrack.com` | `supervisor123` | Supervisor |
+| `supervisor2@logitrack.com` | `supervisor123` | Supervisor |
 | `admin@logitrack.com` | `admin123` | Administrador |
 
 ## API REST — Endpoints
 
 | Método | Ruta | Descripción | Rol | US |
 |---|---|---|---|---|
-| `POST` | `/api/envios/` | Registrar nuevo envío | Ambos | US-07 |
-| `POST` | `/api/envios/importar-csv` | Importar envíos desde CSV | Ambos | US-08 |
-| `GET` | `/api/envios/` | Listar envíos con filtros opcionales | Ambos | US-11/14/15 |
-| `GET` | `/api/envios/{tracking_id}` | Buscar envío por Tracking ID | Ambos | US-12 |
-| `GET` | `/api/envios/{tracking_id}/detalles` | Detalle completo con historial | Ambos | US-13 |
-| `GET` | `/api/envios/{tracking_id}/historial_estado` | Historial de estados | Ambos | US-19 |
+| `POST` | `/api/envios/` | Registrar nuevo envío | Operador/Supervisor/Admin | US-07 |
+| `POST` | `/api/envios/importar-csv` | Importar envíos desde CSV | Operador/Supervisor/Admin | US-08 |
+| `GET` | `/api/envios/` | Listar envíos con filtros opcionales | Todos | US-11/14/15 |
+| `GET` | `/api/envios/{tracking_id}` | Buscar envío por Tracking ID | Todos | US-12 |
+| `GET` | `/api/envios/{tracking_id}/detalles` | Detalle completo con historial | Todos | US-13 |
+| `GET` | `/api/envios/{tracking_id}/historial_estado` | Historial de estados | Todos | US-19 |
 | `GET` | `/api/envios/{tracking_id}/exportar-cliente` | Exportar datos de cliente (CSV) | Administrador | US-23 |
-| `PATCH` | `/api/envios/{tracking_id}` | Editar datos en estado INICIADO | Operador | US-09 |
-| `PATCH` | `/api/envios/{tracking_id}/cancelar` | Cancelar envío en estado INICIADO | Operador | US-10 |
-| `PATCH` | `/api/envios/{tracking_id}/estado` | Cambiar estado | Supervisor | US-08/16/18/20 |
-| `PATCH` | `/api/envios/estado-masivo` | Cambio de estado masivo | Supervisor | US-17 |
-| `PATCH` | `/api/envios/{tracking_id}/anonimizar` | Anonimizar datos personales | Supervisor | US-22 |
+| `PATCH` | `/api/envios/{tracking_id}` | Editar datos en estado INICIADO | Operador/Supervisor/Admin | US-09 |
+| `PATCH` | `/api/envios/{tracking_id}/cancelar` | Cancelar envío en estado INICIADO | Operador/Supervisor/Admin | US-10 |
+| `PATCH` | `/api/envios/{tracking_id}/estado` | Cambiar estado (flujo secuencial) | Supervisor/Admin | US-16/18/20 |
+| `PATCH` | `/api/envios/{tracking_id}/prioridad` | Cambiar prioridad ML manualmente | Supervisor/Admin | US-26 |
+| `PATCH` | `/api/envios/estado-masivo` | Cambio de estado masivo | Supervisor/Admin | US-17 |
+| `PATCH` | `/api/envios/{tracking_id}/anonimizar` | Anonimizar datos personales | Supervisor/Admin | US-22 |
 | `GET` | `/api/usuarios/` | Listar usuarios | Administrador | US-04 |
 | `PATCH` | `/api/usuarios/{email}` | Editar nombre y rol de usuario | Administrador | US-05 |
 | `PATCH` | `/api/usuarios/{email}/desactivar` | Baja lógica de usuario | Administrador | US-06 |
@@ -130,17 +134,19 @@ uvicorn main:app --reload
 
 | Rol | Permisos |
 |---|---|
-| Operador | Registrar, listar, buscar, editar, cancelar |
-| Supervisor | Todo lo anterior + cambiar estado, cambio masivo, anonimizar |
-| Administrador | Todo lo anterior + exportar CSV, gestión de usuarios (alta, edición, baja lógica) |
+| Operador | Registrar, importar CSV, listar, buscar, editar (INICIADO), cancelar (INICIADO) |
+| Supervisor | Todo lo anterior + cambiar estado (flujo secuencial), cambio masivo, ajustar prioridad ML, anonimizar |
+| Administrador | Todo lo anterior + exportar CSV de clientes, gestión de usuarios (alta, edición, baja lógica) |
 
 ## Estados del envío
 
 ```
 INICIADO → EN_SUCURSAL → EN_TRANSITO → ENTREGADO
-                                    ↘
-                                  CANCELADO (solo desde INICIADO)
+    ↘
+CANCELADO (solo desde INICIADO, en cualquier momento antes de avanzar)
 ```
+
+El sistema valida el flujo secuencial: no se puede saltar de INICIADO a ENTREGADO directamente.
 
 ## Machine Learning
 

@@ -29,9 +29,10 @@
 | US-17 | Como Supervisor, quiero cambiar el estado de múltiples envíos en lote | `test_cambio_estado_masivo_supervisor_actualiza_solo_seleccionados` `test_cambio_estado_masivo_con_rol_operador_retorna_403` `test_cambio_estado_masivo_sin_seleccion_retorna_400` `test_cambio_estado_masivo_omite_envio_cancelado` `test_cambio_masivo_omite_envio_entregado` | `tests/test_envios.py` | PR #27 — `feat/cambio-masivo-de-estado-y-consentimiento` |
 | US-19 | Como Operador, quiero ver el historial completo de estados | `test_historial_envio_retorna_lista` `test_historial_envio_inexistente_retorna_404` | `tests/test_envios.py` | PR #7 — `feat/us-19-historial-de-estados-en-detalle` |
 | US-21 | Como Operador, quiero registrar el consentimiento informado al crear un envío | `test_crear_envio_form_sin_consentimiento_muestra_error_y_no_registra` `test_crear_envio_form_con_consentimiento_registra_envio` `test_registrar_envio_sin_consentimiento_no_valida_en_api` | `tests/test_envios.py` | PR #27 — `feat/cambio-masivo-de-estado-y-consentimiento` |
-| US-22 | Como Supervisor, quiero anonimizar datos personales de un envío finalizado | `test_anonimizar_envio_finalizado_reemplaza_datos_personales` `test_anonimizar_envio_no_finalizado_retorna_400` `test_anonimizar_envio_con_rol_invalido_retorna_403` `test_anonimizar_envio_sin_confirmacion_retorna_400` `test_anonimizar_envio_mantiene_historial_intacto` | `tests/test_envios.py` | PR #30 — `feat-us-22-anonimizacion-de-datos` |
+| US-22 | Como Supervisor/Administrador, quiero anonimizar datos personales de un envío finalizado | `test_anonimizar_envio_finalizado_reemplaza_datos_personales` `test_anonimizar_envio_no_finalizado_retorna_400` `test_anonimizar_envio_con_rol_invalido_retorna_403` `test_anonimizar_envio_sin_confirmacion_retorna_400` `test_anonimizar_envio_mantiene_historial_intacto` | `tests/test_envios.py` | PR #30 — `feat-us-22-anonimizacion-de-datos` |
 | US-23 | Como Administrador, quiero exportar datos de un cliente en CSV | `test_exportar_datos_remitente_csv_como_administrador` `test_exportar_datos_destinatario_csv_como_administrador` `test_exportar_datos_cliente_con_rol_invalido_retorna_403` `test_exportar_datos_cliente_inexistente_retorna_404` `test_exportar_datos_destinatario_inexistente_retorna_404` `test_exportar_datos_cliente_con_tipo_invalido_retorna_400` | `tests/test_envios.py` | PR #32 — `feat-us-23-exportacion-datos-cliente` |
-| US-25 | Como Operador, quiero que la IA sugiera la prioridad del envío automáticamente | Integrado en `test_registrar_envio_genera_tracking_id` | `tests/test_envios.py` | PR #34 — `feat-machine-learning` |
+| US-25 | Como Operador, quiero que la IA sugiera la prioridad del envío automáticamente | Integrado en `test_registrar_envio_genera_tracking_id` `test_importar_csv_asigna_prioridad_ml` | `tests/test_envios.py` | PR #34 — `feat-machine-learning` |
+| US-26 | Como Supervisor, quiero cambiar manualmente la prioridad sugerida por la IA | Cubierto por flujo de integración en `test_registrar_envio_genera_tracking_id` | `tests/test_envios.py` | PR feat/sprint3-ml-ux-seguridad |
 
 ---
 
@@ -58,6 +59,7 @@
 | US-17 | Cambio de estado masivo | 5 | ✅ Cubierta |
 | US-19 | Historial de estados | 2 | ✅ Cubierta |
 | US-21 | Consentimiento informado | 3 | ✅ Cubierta |
-| US-22 | Anonimización de datos (Supervisor) | 5 | ✅ Cubierta |
+| US-22 | Anonimización de datos (Supervisor/Admin) | 5 | ✅ Cubierta |
 | US-23 | Exportación CSV de cliente (Administrador) | 6 | ✅ Cubierta |
-| US-25 | Prioridad sugerida por IA | 1 | ✅ Cubierta |
+| US-25 | Prioridad sugerida por IA | 2 | ✅ Cubierta |
+| US-26 | Cambio manual de prioridad ML | 1 | ✅ Cubierta |

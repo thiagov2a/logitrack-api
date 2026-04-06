@@ -9,6 +9,5 @@ class EventoTracking(BaseModel):
     ubicacion: str = Field(..., description="Ubicación donde ocurre el evento")
     observaciones: Optional[str] = None
     estado_actual: EstadoEnvio
-    trackingId: Optional[str] = (
-        None  # Opcional para que el usuario no tenga que mandarlo
-    )
+    trackingId: Optional[str] = None
+    usuario: Optional[str] = None

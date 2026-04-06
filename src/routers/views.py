@@ -3,7 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 from urllib.parse import urlencode
-from src.routers.envios import mock_db_envios, _buscar_envio, _estado_actual, importar_envios_csv
+from src.routers.envios import mock_db_envios, _buscar_envio, _estado_actual, importar_envios_csv, _validar_transicion
 from src.routers.auth import get_usuario_actual, mock_usuarios
 from src.models.envio import Envio
 from src.models.cliente import Cliente
@@ -67,6 +67,8 @@ def vista_listado(
         resultado = [e for e in resultado if e.fechaCreacion <= dt_hasta]
 
     ORDEN = {"ALTA": 3, "MEDIA": 2, "BAJA": 1, None: 0}
+    if not orden_prioridad and usuario.rol in ["supervisor", "administrador"]:
+        orden_prioridad = "desc"
     if orden_prioridad == "asc":
         resultado = sorted(resultado, key=lambda e: ORDEN.get(
             str(e.prioridad_ml).split(".")[-1] if e.prioridad_ml else None, 0
@@ -250,6 +252,7 @@ def cambiar_prioridad_form(
             status_code=303
         )
     envio.prioridad_ml = PrioridadEnvio(nueva_prioridad)
+    envio.prioridadManual = True
     return RedirectResponse(url=f"/envios/{tracking_id}?success=Prioridad+actualizada+correctamente", status_code=303)
 
 
@@ -350,31 +353,12 @@ def cambiar_estado_form(
         estado_actual=EstadoEnvio(nuevo_estado),
         ubicacion=ubicacion,
         observaciones=observaciones,
+        usuario=usuario.email,
     ))
     return RedirectResponse(url=f"/envios/{tracking_id}", status_code=303)
 
 
 # --- Cambio masivo de estado desde HTML ---
-@router.post("/envios/cambio-masivo/confirmar")
-async def confirmar_cambio_masivo_form(request: Request):
-    """Recibe los tracking_ids seleccionados y muestra la página de confirmación."""
-    usuario = get_usuario_actual(request)
-    if not usuario or usuario.rol not in ["supervisor", "administrador"]:
-        return RedirectResponse(url="/?error=Acceso+denegado", status_code=303)
-    form = await request.form()
-    tracking_ids = form.getlist("tracking_ids")
-    if not tracking_ids:
-        return RedirectResponse(url="/?error=No+se+selecciono+ningun+envio", status_code=303)
-    envios_sel = [e for e in mock_db_envios if e.trackingId in tracking_ids]
-    return _render(
-        "cambio_masivo.html", request,
-        envios=envios_sel,
-        tracking_ids=tracking_ids,
-        rol=usuario.rol,
-        usuario=usuario,
-    )
-
-
 @router.post("/envios/cambio-masivo")
 async def cambiar_estado_masivo_form(
     request: Request,
@@ -410,11 +394,15 @@ async def cambiar_estado_masivo_form(
         if _estado_actual(envio) in ESTADOS_TERMINALES:
             total_omitidos += 1
             continue
+        if not _validar_transicion(_estado_actual(envio), estado_enum):
+            total_omitidos += 1
+            continue
         envio.historial.append(EventoTracking(
             trackingId=tracking_id,
             estado_actual=estado_enum,
             ubicacion=ubicacion,
             observaciones=observaciones or f"Cambio masivo realizado por {usuario.nombre}.",
+            usuario=usuario.email,
         ))
         total_actualizados += 1
 
