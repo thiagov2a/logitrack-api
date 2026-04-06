@@ -8,8 +8,7 @@ from src.routers.auth import get_usuario_actual, mock_usuarios
 from src.models.envio import Envio
 from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
-from src.models.enums import EstadoEnvio, PrioridadEnvio
-from src.models.enums import EstadoEnvio
+from src.models.enums import EstadoEnvio, PrioridadEnvio  # noqa: F811
 from src.models.usuario import Usuario
 import uuid
 import io
@@ -159,6 +158,8 @@ def cambiar_prioridad_form(
     envio = _buscar_envio(tracking_id)
     envio.prioridad_ml = PrioridadEnvio(nueva_prioridad)
     return RedirectResponse(url=f"/envios/{tracking_id}?success=Prioridad+actualizada+correctamente", status_code=303)
+
+
 # --- US-09: Editar envío desde HTML (solo Operador, solo en estado INICIADO) ---
 @router.post("/envios/{tracking_id}/editar")
 def editar_envio_form(
