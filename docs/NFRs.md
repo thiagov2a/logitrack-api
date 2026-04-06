@@ -2,7 +2,7 @@
 
 **Proyecto:** LogiTrack (SFGLD) — Grupo 10  
 **Materia:** Proyecto Profesional I / Laboratorio de Construcción de Software  
-**Sprint:** 2
+**Sprint:** 3
 
 ---
 

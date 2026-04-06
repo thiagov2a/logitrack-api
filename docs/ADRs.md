@@ -27,7 +27,7 @@ La especialización de Python en datos (Pandas, Scikit-Learn) supera las capacid
 
 ## ADR-002: Selección del Algoritmo de Clasificación para Probabilidad de Retraso
 
-**Fecha:** 22 de marzo de 2026 | **Estado:** Propuesto
+**Fecha:** 22 de marzo de 2026 | **Estado:** Implementado
 
 **Contexto:**  
 Se necesita clasificar envíos ("A tiempo" / "Con retraso") priorizando precisión e interpretabilidad. Se evaluaron Regresión Logística, Random Forest y Naïve Bayes.

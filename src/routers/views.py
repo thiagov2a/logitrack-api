@@ -4,11 +4,12 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional
 from urllib.parse import urlencode
 from src.routers.envios import mock_db_envios, _buscar_envio, _estado_actual
-from src.routers.auth import get_usuario_actual
+from src.routers.auth import get_usuario_actual, mock_usuarios
 from src.models.envio import Envio
 from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
 from src.models.enums import EstadoEnvio
+from src.models.usuario import Usuario
 import uuid
 import io
 import csv
@@ -136,29 +137,18 @@ def crear_envio_form(
 
 
 @router.get("/envios/{tracking_id}", response_class=HTMLResponse)
-def vista_detalle(
-    request: Request,
-    tracking_id: str,
-    rol: Optional[str] = None,
-    error: Optional[str] = None,
-    success: Optional[str] = None,
-):
+def vista_detalle(request: Request, tracking_id: str):
+    usuario = get_usuario_actual(request)
+    if not usuario:
+        return RedirectResponse(url="/login", status_code=303)
     envio = _buscar_envio(tracking_id)
-    estado_actual = _estado_actual(envio)
+    return _render("detalle.html", request, envio=envio, rol=usuario.rol, usuario=usuario)
 
-    return _render(
-        "detalle.html",
-        request,
-        envio=envio,
-        rol=rol,
-        error=error,
-        success=success,
-        estado_actual=estado_actual,
-    )
 
-# --- US-09: Editar envío desde HTML (solo Operador y solo en estado INICIADO) ---
+# --- US-09: Editar envío desde HTML (solo Operador, solo en estado INICIADO) ---
 @router.post("/envios/{tracking_id}/editar")
 def editar_envio_form(
+    request: Request,
     tracking_id: str,
     origen: str = Form(...),
     destino: str = Form(...),
@@ -167,22 +157,15 @@ def editar_envio_form(
     destinatario_dni: Optional[str] = Form(None),
     destinatario_nombre: Optional[str] = Form(None),
     consentimiento: Optional[str] = Form(None),
-    rol: str = Form(...),
 ):
-    if (rol or "").lower() != "operador":
-        return RedirectResponse(
-            url=f"/envios/{tracking_id}?rol={rol}&error=Acceso denegado: solo el Operador puede editar el envío.",
-            status_code=303
-        )
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "operador":
+        raise HTTPException(status_code=403, detail="Acceso denegado: solo el Operador puede editar el envío.")
 
     envio = _buscar_envio(tracking_id)
-    estado_actual = _estado_actual(envio)
 
-    if estado_actual != EstadoEnvio.INICIADO:
-        return RedirectResponse(
-            url=f"/envios/{tracking_id}?rol={rol}&error=Solo se puede editar un envío en estado INICIADO.",
-            status_code=303
-        )
+    if _estado_actual(envio) != EstadoEnvio.INICIADO:
+        raise HTTPException(status_code=400, detail="Solo se puede editar un envío en estado INICIADO.")
 
     envio.origen = origen
     envio.destino = destino
@@ -200,53 +183,28 @@ def editar_envio_form(
             envio.destinatario.nombre = destinatario_nombre
         else:
             envio.destinatario = Cliente(dni=destinatario_dni, nombre=destinatario_nombre)
-    else:
-        envio.destinatario = None
 
-    return RedirectResponse(
-        url=f"/envios/{tracking_id}?rol={rol}&success=Datos del envío actualizados correctamente.",
-        status_code=303
-    )
-    
-# --- US-10: Cancelar envío desde HTML (solo Operador y solo en estado INICIADO) ---
+    return RedirectResponse(url=f"/envios/{tracking_id}", status_code=303)
+
+
+# --- US-10: Cancelar envío desde HTML (solo Operador, solo en estado INICIADO) ---
 @router.post("/envios/{tracking_id}/cancelar")
 def cancelar_envio_form(
+    request: Request,
     tracking_id: str,
     confirmar: Optional[str] = Form(None),
-    rol: str = Form(...),
 ):
-    if (rol or "").lower() != "operador":
-        params = {
-            "rol": rol,
-            "error": "Acceso denegado: solo el Operador puede cancelar el envío."
-        }
-        return RedirectResponse(
-            url=f"/envios/{tracking_id}?{urlencode(params)}",
-            status_code=303
-        )
-
-    envio = _buscar_envio(tracking_id)
-    estado_actual = _estado_actual(envio)
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "operador":
+        raise HTTPException(status_code=403, detail="Acceso denegado: solo el Operador puede cancelar el envío.")
 
     if confirmar != "on":
-        params = {
-            "rol": rol,
-            "error": "Debe confirmar la cancelación del envío."
-        }
-        return RedirectResponse(
-            url=f"/envios/{tracking_id}?{urlencode(params)}",
-            status_code=303
-        )
+        raise HTTPException(status_code=400, detail="Debe confirmar la cancelación del envío.")
 
-    if estado_actual != EstadoEnvio.INICIADO:
-        params = {
-            "rol": rol,
-            "error": "Solo se puede cancelar un envío en estado INICIADO."
-        }
-        return RedirectResponse(
-            url=f"/envios/{tracking_id}?{urlencode(params)}",
-            status_code=303
-        )
+    envio = _buscar_envio(tracking_id)
+
+    if _estado_actual(envio) != EstadoEnvio.INICIADO:
+        raise HTTPException(status_code=400, detail="Solo se puede cancelar un envío en estado INICIADO.")
 
     envio.historial.append(EventoTracking(
         trackingId=tracking_id,
@@ -254,15 +212,7 @@ def cancelar_envio_form(
         ubicacion=envio.origen,
         observaciones="Envio cancelado por el Operador.",
     ))
-
-    params = {
-        "rol": rol,
-        "success": "Envío cancelado correctamente."
-    }
-    return RedirectResponse(
-        url=f"/envios/{tracking_id}?{urlencode(params)}",
-        status_code=303
-    )
+    return RedirectResponse(url=f"/envios/{tracking_id}", status_code=303)
 
 
 # --- Cambio individual de estado desde HTML ---
@@ -359,110 +309,72 @@ async def cambiar_estado_masivo_form(
     return RedirectResponse(url=f"/?{urlencode(params_finales)}", status_code=303)
 
 
-# --- US-22: Anonimización desde HTML ---
+# --- US-22: Anonimización desde HTML (Administrador) ---
 @router.post("/envios/{tracking_id}/anonimizar")
 def anonimizar_envio_form(
     tracking_id: str,
+    request: Request,
     confirmar: Optional[str] = Form(None),
-    rol: str = Form(...),
 ):
-    if (rol or "").lower() != "administrador":
-        return RedirectResponse(
-            url=f"/envios/{tracking_id}?rol={rol}&error=Acceso denegado: solo el Administrador puede anonimizar.",
-            status_code=303
-        )
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        raise HTTPException(status_code=403, detail="Acceso denegado: solo el Administrador puede anonimizar.")
 
     if confirmar != "on":
-        return RedirectResponse(
-            url=f"/envios/{tracking_id}?rol={rol}&error=Debe confirmar la anonimización.",
-            status_code=303
-        )
+        return RedirectResponse(url=f"/envios/{tracking_id}?error=Debe+confirmar+la+anonimizacion", status_code=303)
 
     envio = _buscar_envio(tracking_id)
-    estado_actual = _estado_actual(envio)
 
-    if estado_actual not in [EstadoEnvio.ENTREGADO, EstadoEnvio.CANCELADO]:
+    if _estado_actual(envio) not in ESTADOS_TERMINALES:
         return RedirectResponse(
-            url=f"/envios/{tracking_id}?rol={rol}&error=Solo se puede anonimizar un envío finalizado.",
-            status_code=303
+            url=f"/envios/{tracking_id}?error=Solo+se+puede+anonimizar+un+envio+finalizado", status_code=303
         )
 
     if envio.remitente:
         envio.remitente.nombre = "***"
         envio.remitente.dni = "***"
-        if hasattr(envio.remitente, "direccion"):
-            envio.remitente.direccion = "***"
-        if hasattr(envio.remitente, "anonimizado"):
-            envio.remitente.anonimizado = True
+        envio.remitente.anonimizado = True
 
-    if getattr(envio, "destinatario", None):
+    if envio.destinatario:
         envio.destinatario.nombre = "***"
         envio.destinatario.dni = "***"
-        if hasattr(envio.destinatario, "direccion"):
-            envio.destinatario.direccion = "***"
-        if hasattr(envio.destinatario, "anonimizado"):
-            envio.destinatario.anonimizado = True
+        envio.destinatario.anonimizado = True
 
-    return RedirectResponse(
-        url=f"/envios/{tracking_id}?rol={rol}&success=Datos personales anonimizados correctamente.",
-        status_code=303
-    )
+    return RedirectResponse(url=f"/envios/{tracking_id}?success=Datos+anonimizados+correctamente", status_code=303)
 
-# --- US-23: Exportación CSV desde HTML ---
+
+# --- US-23: Exportación CSV desde HTML (Administrador) ---
 @router.get("/envios/{tracking_id}/exportar-cliente")
 def exportar_cliente_form(
     tracking_id: str,
+    request: Request,
     tipo_cliente: str = Query(...),
-    rol: str = Query(...),
 ):
-    if (rol or "").lower() != "administrador":
-        return RedirectResponse(
-            url=f"/envios/{tracking_id}?rol={rol}&error=Acceso denegado: solo el Administrador puede exportar datos.",
-            status_code=303
-        )
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        raise HTTPException(status_code=403, detail="Acceso denegado: solo el Administrador puede exportar datos.")
 
     envio = _buscar_envio(tracking_id)
 
     tipo_normalizado = (tipo_cliente or "").lower()
     if tipo_normalizado not in ["remitente", "destinatario"]:
-        return RedirectResponse(
-            url=f"/envios/{tracking_id}?rol={rol}&error=Tipo de cliente inválido.",
-            status_code=303
-        )
+        raise HTTPException(status_code=400, detail="Tipo de cliente inválido.")
 
     cliente = envio.remitente if tipo_normalizado == "remitente" else envio.destinatario
 
     if not cliente:
-        return RedirectResponse(
-            url=f"/envios/{tracking_id}?rol={rol}&error=El envío no tiene {tipo_normalizado} registrado.",
-            status_code=303
-        )
+        raise HTTPException(status_code=404, detail=f"El envío no tiene {tipo_normalizado} registrado.")
 
     output = io.StringIO()
-    writer = csv.writer(
-        output,
-        delimiter=";",
-        quotechar='"',
-        quoting=csv.QUOTE_ALL,
-        lineterminator="\n"
-    )
-
-    writer.writerow([
-        "tracking_id",
-        "tipo_cliente",
-        "nombre",
-        "dni",
-        "direccion",
-        "anonimizado"
-    ])
-
+    writer = csv.writer(output)
+    writer.writerow(["tracking_id", "tipo_cliente", "nombre", "dni", "direccion", "anonimizado"])
     writer.writerow([
         envio.trackingId,
         tipo_normalizado,
         getattr(cliente, "nombre", "") or "",
         getattr(cliente, "dni", "") or "",
         getattr(cliente, "direccion", "") or "",
-        str(getattr(cliente, "anonimizado", False)),
+        getattr(cliente, "anonimizado", False),
     ])
 
     output.seek(0)
@@ -473,3 +385,44 @@ def exportar_cliente_form(
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
+
+
+# --- US-04: Listado de usuarios (vista HTML) ---
+@router.get("/usuarios/", response_class=HTMLResponse)
+def vista_usuarios(request: Request):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+    return _render("usuarios.html", request, usuarios=mock_usuarios, usuario=usuario, rol=usuario.rol)
+
+
+# --- US-03: Alta de usuario (vista HTML) ---
+@router.get("/usuarios/nuevo", response_class=HTMLResponse)
+def vista_nuevo_usuario(request: Request):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+    return _render("nuevo_usuario.html", request, error=None, usuario=usuario, rol=usuario.rol, datos={})
+
+
+@router.post("/usuarios/nuevo")
+def crear_usuario_form(
+    request: Request,
+    nombre: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    rol_nuevo: str = Form(...),
+):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+
+    datos = {"nombre": nombre, "email": email, "rol": rol_nuevo}
+
+    if next((u for u in mock_usuarios if u.email == email), None):
+        return _render("nuevo_usuario.html", request,
+                       error="Ya existe un usuario con ese email.",
+                       usuario=usuario, rol=usuario.rol, datos=datos)
+
+    mock_usuarios.append(Usuario(email=email, password=password, nombre=nombre, rol=rol_nuevo, activo=True))
+    return RedirectResponse(url="/usuarios/", status_code=303)
