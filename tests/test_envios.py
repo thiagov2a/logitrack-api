@@ -509,3 +509,81 @@ def test_exportar_datos_cliente_con_tipo_invalido_retorna_400(client):
                           headers={"x-rol": "administrador"})
     assert response.status_code == 400
     assert response.json()["detail"] == "tipo_cliente debe ser 'remitente' o 'destinatario'."
+
+
+# --- US-08: Importar envios desde CSV ---
+
+def test_importar_csv_valido_registra_envios(client):
+    contenido = (
+        "origen,destino,remitente_dni,remitente_nombre,destinatario_dni,destinatario_nombre\n"
+        "Salta,Jujuy,11111111,Pedro Gomez,22222222,Laura Diaz\n"
+        "Tucuman,Rosario,33333333,Carlos Ruiz,44444444,Ana Torres\n"
+    )
+    cantidad_antes = len(envios_module.mock_db_envios)
+    from io import BytesIO
+    response = client.post(
+        "/api/envios/importar-csv",
+        files={"archivo": ("envios.csv", BytesIO(contenido.encode()), "text/csv")}
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert len(data["importados"]) == 2
+    assert len(data["errores"]) == 0
+    assert len(envios_module.mock_db_envios) == cantidad_antes + 2
+    assert all(tid.startswith("TRK-") for tid in data["importados"])
+
+
+def test_importar_csv_archivo_no_csv_retorna_400(client):
+    from io import BytesIO
+    response = client.post(
+        "/api/envios/importar-csv",
+        files={"archivo": ("envios.txt", BytesIO(b"datos"), "text/plain")}
+    )
+    assert response.status_code == 400
+    assert "CSV" in response.json()["detail"]
+
+
+def test_importar_csv_columnas_faltantes_retorna_400(client):
+    contenido = "origen,destino\nSalta,Jujuy\n"
+    from io import BytesIO
+    response = client.post(
+        "/api/envios/importar-csv",
+        files={"archivo": ("envios.csv", BytesIO(contenido.encode()), "text/csv")}
+    )
+    assert response.status_code == 400
+    assert "columnas" in response.json()["detail"]
+
+
+def test_importar_csv_fila_invalida_reporta_error_y_continua(client):
+    contenido = (
+        "origen,destino,remitente_dni,remitente_nombre,destinatario_dni,destinatario_nombre\n"
+        "Salta,Jujuy,11111111,Pedro Gomez,22222222,Laura Diaz\n"
+        "Tucuman,Rosario,DNI_INVALIDO,Carlos Ruiz,44444444,Ana Torres\n"
+    )
+    from io import BytesIO
+    response = client.post(
+        "/api/envios/importar-csv",
+        files={"archivo": ("envios.csv", BytesIO(contenido.encode()), "text/csv")}
+    )
+    assert response.status_code == 201
+    data = response.json()
+    assert len(data["importados"]) == 1
+    assert len(data["errores"]) == 1
+    assert data["errores"][0]["fila"] == 3
+
+
+def test_importar_csv_asigna_prioridad_ml(client):
+    cols = (
+        "origen,destino,remitente_dni,remitente_nombre,"
+        "destinatario_dni,destinatario_nombre,peso_kg,largo_cm,ancho_cm,alto_cm"
+    )
+    contenido = f"{cols}\nSalta,Jujuy,11111111,Pedro Gomez,22222222,Laura Diaz,25.0,80,60,50\n"
+    from io import BytesIO
+    response = client.post(
+        "/api/envios/importar-csv",
+        files={"archivo": ("envios.csv", BytesIO(contenido.encode()), "text/csv")}
+    )
+    assert response.status_code == 201
+    tracking_id = response.json()["importados"][0]
+    envio = next(e for e in envios_module.mock_db_envios if e.trackingId == tracking_id)
+    assert envio.prioridad_ml is not None

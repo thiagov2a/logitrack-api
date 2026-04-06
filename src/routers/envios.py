@@ -57,13 +57,6 @@ class ConfirmacionAnonimizacion(BaseModel):
 
 # --- Helpers ---
 
-FLUJO_ESTADOS = [
-    EstadoEnvio.INICIADO,
-    EstadoEnvio.EN_SUCURSAL,
-    EstadoEnvio.EN_TRANSITO,
-    EstadoEnvio.ENTREGADO,
-]
-
 ESTADOS_TERMINALES = [
     EstadoEnvio.ENTREGADO,
     EstadoEnvio.CANCELADO,
@@ -174,7 +167,7 @@ mock_db_envios = [
 
 # --- Endpoints ---
 
-# US 08: Importar envios desde CSV
+# US-08: Importar envios desde CSV
 @router.post("/importar-csv", status_code=201)
 async def importar_envios_csv(archivo: UploadFile = File(...)):
     """Importa envios masivamente desde un archivo CSV."""
