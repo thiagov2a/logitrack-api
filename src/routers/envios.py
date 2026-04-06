@@ -150,13 +150,25 @@ def _crear_semilla(
             )
         )
 
+    dims = envio.dimensiones
+    pred = predecir_prioridad(
+        peso_kg=envio.peso_kg,
+        largo_cm=dims.largo_cm if dims else None,
+        ancho_cm=dims.ancho_cm if dims else None,
+        alto_cm=dims.alto_cm if dims else None,
+    )
+    envio.prioridad_ml = PrioridadEnvio(pred)
+
     return envio
 
 
 mock_db_envios = [
-    _crear_semilla("Buenos Aires", "Cordoba", "12345678", "Ana Gomez", EstadoEnvio.EN_TRANSITO),
-    _crear_semilla("Rosario", "Mendoza", "87654321", "Luis Perez", EstadoEnvio.EN_SUCURSAL),
-    _crear_semilla("La Plata", "Tucuman", "11223344", "Maria Lopez", EstadoEnvio.INICIADO),
+    _crear_semilla("Buenos Aires", "Cordoba", "12345678", "Ana Gomez", EstadoEnvio.EN_TRANSITO,
+                   peso=25.0, largo=80, ancho=60, alto=50),
+    _crear_semilla("Rosario", "Mendoza", "87654321", "Luis Perez", EstadoEnvio.EN_SUCURSAL,
+                   peso=8.0, largo=40, ancho=30, alto=25),
+    _crear_semilla("La Plata", "Tucuman", "11223344", "Maria Lopez", EstadoEnvio.INICIADO,
+                   peso=1.0, largo=10, ancho=10, alto=5),
 ]
 
 
@@ -429,11 +441,11 @@ def anonimizar_envio(
     confirmacion: ConfirmacionAnonimizacion,
     x_rol: str = Header(...)
 ):
-    """US-22: Anonimiza irreversiblemente los datos personales de un envio finalizado. Solo Administrador."""
-    if x_rol.lower() != "administrador":
+    """US-22: Anonimiza irreversiblemente los datos personales de un envio finalizado. Solo Supervisor."""
+    if x_rol.lower() != "supervisor":
         raise HTTPException(
             status_code=403,
-            detail="Acceso denegado: se requiere rol Administrador."
+            detail="Acceso denegado: se requiere rol Supervisor."
         )
 
     if not confirmacion.confirmar:

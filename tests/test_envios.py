@@ -413,7 +413,7 @@ def test_anonimizar_envio_finalizado_reemplaza_datos_personales(client):
                  json={"nuevo_estado": "ENTREGADO", "ubicacion": "Cordoba"},
                  headers={"x-rol": "supervisor"})
     response = client.patch("/api/envios/TRK-TEST01/anonimizar",
-                            json={"confirmar": True}, headers={"x-rol": "administrador"})
+                            json={"confirmar": True}, headers={"x-rol": "supervisor"})
     assert response.status_code == 200
     envio = response.json()["envio"]
     assert envio["remitente"]["nombre"] == "***"
@@ -424,7 +424,7 @@ def test_anonimizar_envio_finalizado_reemplaza_datos_personales(client):
 
 def test_anonimizar_envio_no_finalizado_retorna_400(client):
     response = client.patch("/api/envios/TRK-TEST01/anonimizar",
-                            json={"confirmar": True}, headers={"x-rol": "administrador"})
+                            json={"confirmar": True}, headers={"x-rol": "supervisor"})
     assert response.status_code == 400
     assert response.json()["detail"] == "Solo se puede anonimizar un envio finalizado."
 
@@ -434,9 +434,9 @@ def test_anonimizar_envio_con_rol_invalido_retorna_403(client):
                  json={"nuevo_estado": "ENTREGADO", "ubicacion": "Cordoba"},
                  headers={"x-rol": "supervisor"})
     response = client.patch("/api/envios/TRK-TEST01/anonimizar",
-                            json={"confirmar": True}, headers={"x-rol": "supervisor"})
+                            json={"confirmar": True}, headers={"x-rol": "operador"})
     assert response.status_code == 403
-    assert response.json()["detail"] == "Acceso denegado: se requiere rol Administrador."
+    assert response.json()["detail"] == "Acceso denegado: se requiere rol Supervisor."
 
 
 def test_anonimizar_envio_sin_confirmacion_retorna_400(client):
@@ -444,7 +444,7 @@ def test_anonimizar_envio_sin_confirmacion_retorna_400(client):
                  json={"nuevo_estado": "ENTREGADO", "ubicacion": "Cordoba"},
                  headers={"x-rol": "supervisor"})
     response = client.patch("/api/envios/TRK-TEST01/anonimizar",
-                            json={"confirmar": False}, headers={"x-rol": "administrador"})
+                            json={"confirmar": False}, headers={"x-rol": "supervisor"})
     assert response.status_code == 400
     assert response.json()["detail"] == "La anonimización debe ser confirmada explícitamente."
 
@@ -455,7 +455,7 @@ def test_anonimizar_envio_mantiene_historial_intacto(client):
                  headers={"x-rol": "supervisor"})
     historial_antes = client.get("/api/envios/TRK-TEST01/detalles").json()["historial"]
     client.patch("/api/envios/TRK-TEST01/anonimizar",
-                 json={"confirmar": True}, headers={"x-rol": "administrador"})
+                 json={"confirmar": True}, headers={"x-rol": "supervisor"})
     historial_despues = client.get("/api/envios/TRK-TEST01/detalles").json()["historial"]
     assert historial_despues == historial_antes
 

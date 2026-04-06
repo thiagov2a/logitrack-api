@@ -93,8 +93,14 @@ def crear_envio_form(
     destinatario_dni: str = Form(...),
     destinatario_nombre: str = Form(...),
     consentimiento: Optional[str] = Form(None),
+    peso_kg: Optional[float] = Form(None),
+    largo_cm: Optional[float] = Form(None),
+    ancho_cm: Optional[float] = Form(None),
+    alto_cm: Optional[float] = Form(None),
 ):
     from pydantic import ValidationError
+    from src.ml.predictor import predecir_prioridad
+    from src.models.enums import PrioridadEnvio
     usuario = get_usuario_actual(request)
     if not usuario:
         return RedirectResponse(url="/login", status_code=303)
@@ -106,6 +112,10 @@ def crear_envio_form(
         "remitente_nombre": remitente_nombre,
         "destinatario_dni": destinatario_dni or "",
         "destinatario_nombre": destinatario_nombre or "",
+        "peso_kg": peso_kg or "",
+        "largo_cm": largo_cm or "",
+        "ancho_cm": ancho_cm or "",
+        "alto_cm": alto_cm or "",
     }
 
     if not consentimiento:
@@ -113,12 +123,18 @@ def crear_envio_form(
                        error="Debe aceptar las políticas de privacidad.", rol=usuario.rol, usuario=usuario, datos=datos)
 
     try:
+        dims = None
+        if largo_cm and ancho_cm and alto_cm:
+            from src.models.envio import Dimensiones
+            dims = Dimensiones(largo_cm=largo_cm, ancho_cm=ancho_cm, alto_cm=alto_cm)
         destinatario = Cliente(dni=destinatario_dni, nombre=destinatario_nombre)
         nuevo_envio = Envio(
             trackingId=f"TRK-{uuid.uuid4().hex[:8].upper()}",
             origen=origen,
             destino=destino,
             consentimiento=True,
+            peso_kg=peso_kg,
+            dimensiones=dims,
             remitente=Cliente(dni=remitente_dni, nombre=remitente_nombre),
             destinatario=destinatario,
         )
@@ -132,6 +148,16 @@ def crear_envio_form(
         ubicacion=origen,
         observaciones=f"Envio registrado por {usuario.nombre}.",
     ))
+
+    dims = nuevo_envio.dimensiones
+    pred = predecir_prioridad(
+        peso_kg=nuevo_envio.peso_kg,
+        largo_cm=dims.largo_cm if dims else None,
+        ancho_cm=dims.ancho_cm if dims else None,
+        alto_cm=dims.alto_cm if dims else None,
+    )
+    nuevo_envio.prioridad_ml = PrioridadEnvio(pred)
+
     mock_db_envios.append(nuevo_envio)
     return RedirectResponse(url=f"/envios/{nuevo_envio.trackingId}", status_code=303)
 
@@ -324,7 +350,7 @@ async def cambiar_estado_masivo_form(
     return RedirectResponse(url=f"/?{urlencode(params_finales)}", status_code=303)
 
 
-# --- US-22: Anonimización desde HTML (Administrador) ---
+# --- US-22: Anonimización desde HTML (Supervisor) ---
 @router.post("/envios/{tracking_id}/anonimizar")
 def anonimizar_envio_form(
     tracking_id: str,
@@ -332,8 +358,8 @@ def anonimizar_envio_form(
     confirmar: Optional[str] = Form(None),
 ):
     usuario = get_usuario_actual(request)
-    if not usuario or usuario.rol != "administrador":
-        raise HTTPException(status_code=403, detail="Acceso denegado: solo el Administrador puede anonimizar.")
+    if not usuario or usuario.rol != "supervisor":
+        raise HTTPException(status_code=403, detail="Acceso denegado: solo el Supervisor puede anonimizar.")
 
     if confirmar != "on":
         return RedirectResponse(url=f"/envios/{tracking_id}?error=Debe+confirmar+la+anonimizacion", status_code=303)
