@@ -3,6 +3,13 @@
 
 {% block content %}
 
+{% if success %}
+<div class="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 mb-4 flex items-start gap-2">
+    <span class="text-lg">✅</span>
+    <p class="text-sm">{{ success }}</p>
+</div>
+{% endif %}
+
 <div class="flex items-center justify-between mb-6">
     <div>
         <h1 class="text-2xl font-bold text-gray-800">Gestión de Usuarios</h1>

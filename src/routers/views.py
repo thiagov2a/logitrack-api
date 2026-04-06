@@ -408,7 +408,8 @@ def vista_usuarios(request: Request):
     usuario = get_usuario_actual(request)
     if not usuario or usuario.rol != "administrador":
         return RedirectResponse(url="/", status_code=303)
-    return _render("usuarios.html", request, usuarios=mock_usuarios, usuario=usuario, rol=usuario.rol)
+    success = request.query_params.get("success")
+    return _render("usuarios.html", request, usuarios=mock_usuarios, usuario=usuario, rol=usuario.rol, success=success)
 
 
 # --- US-03: Alta de usuario (vista HTML) ---
@@ -441,3 +442,44 @@ def crear_usuario_form(
 
     mock_usuarios.append(Usuario(email=email, password=password, nombre=nombre, rol=rol_nuevo, activo=True))
     return RedirectResponse(url="/usuarios/", status_code=303)
+
+
+# --- US-05: Editar usuario (vista HTML) ---
+@router.get("/usuarios/{email}/editar", response_class=HTMLResponse)
+def vista_editar_usuario(request: Request, email: str):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+    from src.routers.auth import mock_usuarios as mu
+    target = next((u for u in mu if u.email == email), None)
+    if not target:
+        return RedirectResponse(url="/usuarios/", status_code=303)
+    return _render("editar_usuario.html", request, target=target, error=None, usuario=usuario, rol=usuario.rol)
+
+
+@router.post("/usuarios/{email}/editar")
+def editar_usuario_form(
+    request: Request,
+    email: str,
+    nombre: str = Form(...),
+    rol_nuevo: str = Form(...),
+):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+    from src.routers.auth import mock_usuarios as mu
+    target = next((u for u in mu if u.email == email), None)
+    if not target:
+        return RedirectResponse(url="/usuarios/", status_code=303)
+
+    roles_validos = ["operador", "supervisor", "administrador"]
+    if len(nombre.strip()) < 2:
+        return _render("editar_usuario.html", request, target=target,
+                       error="El nombre debe tener al menos 2 caracteres.", usuario=usuario, rol=usuario.rol)
+    if rol_nuevo.lower() not in roles_validos:
+        return _render("editar_usuario.html", request, target=target,
+                       error="Rol inválido.", usuario=usuario, rol=usuario.rol)
+
+    target.nombre = nombre.strip()
+    target.rol = rol_nuevo.lower()
+    return RedirectResponse(url="/usuarios/?success=Usuario+actualizado+correctamente", status_code=303)
