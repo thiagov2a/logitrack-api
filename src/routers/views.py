@@ -4,11 +4,12 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional
 from urllib.parse import urlencode
 from src.routers.envios import mock_db_envios, _buscar_envio, _estado_actual
-from src.routers.auth import get_usuario_actual
+from src.routers.auth import get_usuario_actual, mock_usuarios
 from src.models.envio import Envio
 from src.models.cliente import Cliente
 from src.models.tracking import EventoTracking
 from src.models.enums import EstadoEnvio
+from src.models.usuario import Usuario
 import uuid
 import io
 import csv
@@ -314,3 +315,44 @@ def exportar_cliente_form(
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
+
+
+# --- US-04: Listado de usuarios (vista HTML) ---
+@router.get("/usuarios/", response_class=HTMLResponse)
+def vista_usuarios(request: Request):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+    return _render("usuarios.html", request, usuarios=mock_usuarios, usuario=usuario, rol=usuario.rol)
+
+
+# --- US-03: Alta de usuario (vista HTML) ---
+@router.get("/usuarios/nuevo", response_class=HTMLResponse)
+def vista_nuevo_usuario(request: Request):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+    return _render("nuevo_usuario.html", request, error=None, usuario=usuario, rol=usuario.rol, datos={})
+
+
+@router.post("/usuarios/nuevo")
+def crear_usuario_form(
+    request: Request,
+    nombre: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    rol_nuevo: str = Form(...),
+):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+
+    datos = {"nombre": nombre, "email": email, "rol": rol_nuevo}
+
+    if next((u for u in mock_usuarios if u.email == email), None):
+        return _render("nuevo_usuario.html", request,
+                       error="Ya existe un usuario con ese email.",
+                       usuario=usuario, rol=usuario.rol, datos=datos)
+
+    mock_usuarios.append(Usuario(email=email, password=password, nombre=nombre, rol=rol_nuevo, activo=True))
+    return RedirectResponse(url="/usuarios/", status_code=303)
