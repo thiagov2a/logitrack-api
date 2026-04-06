@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Query, Header
+from fastapi import APIRouter, HTTPException, Query, Header, UploadFile, File
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from typing import Optional, List
@@ -173,6 +173,91 @@ mock_db_envios = [
 
 
 # --- Endpoints ---
+
+# US 08: Importar envios desde CSV
+@router.post("/importar-csv", status_code=201)
+async def importar_envios_csv(archivo: UploadFile = File(...)):
+    """Importa envios masivamente desde un archivo CSV."""
+    if not archivo.filename.endswith(".csv"):
+        raise HTTPException(status_code=400, detail="El archivo debe ser un CSV.")
+
+    contenido = await archivo.read()
+    texto = contenido.decode("utf-8")
+    reader = csv.DictReader(io.StringIO(texto))
+
+    campos_requeridos = {
+        "origen", "destino", "remitente_dni", "remitente_nombre",
+        "destinatario_dni", "destinatario_nombre",
+    }
+    if not campos_requeridos.issubset(set(reader.fieldnames or [])):
+        raise HTTPException(
+            status_code=400,
+            detail=f"El CSV debe contener las columnas: {', '.join(campos_requeridos)}"
+        )
+
+    importados = []
+    errores = []
+
+    for i, fila in enumerate(reader, start=2):
+        try:
+            dims = None
+            largo = fila.get("largo_cm", "").strip()
+            ancho = fila.get("ancho_cm", "").strip()
+            alto = fila.get("alto_cm", "").strip()
+            if largo and ancho and alto:
+                dims = Dimensiones(
+                    largo_cm=float(largo),
+                    ancho_cm=float(ancho),
+                    alto_cm=float(alto)
+                )
+
+            peso = fila.get("peso_kg", "").strip()
+            peso_kg = float(peso) if peso else None
+
+            envio = Envio(
+                trackingId=f"TRK-{uuid.uuid4().hex[:8].upper()}",
+                origen=fila["origen"].strip(),
+                destino=fila["destino"].strip(),
+                peso_kg=peso_kg,
+                dimensiones=dims,
+                consentimiento=True,
+                remitente=Cliente(
+                    dni=fila["remitente_dni"].strip(),
+                    nombre=fila["remitente_nombre"].strip()
+                ),
+                destinatario=Cliente(
+                    dni=fila["destinatario_dni"].strip(),
+                    nombre=fila["destinatario_nombre"].strip()
+                ),
+            )
+
+            pred = predecir_prioridad(
+                peso_kg=peso_kg,
+                largo_cm=dims.largo_cm if dims else None,
+                ancho_cm=dims.ancho_cm if dims else None,
+                alto_cm=dims.alto_cm if dims else None,
+            )
+            envio.prioridad_ml = PrioridadEnvio(pred)
+
+            envio.historial.append(EventoTracking(
+                trackingId=envio.trackingId,
+                estado_actual=EstadoEnvio.INICIADO,
+                ubicacion=envio.origen,
+                observaciones="Envio importado desde CSV.",
+            ))
+
+            mock_db_envios.append(envio)
+            importados.append(envio.trackingId)
+
+        except Exception as e:
+            errores.append({"fila": i, "error": str(e)})
+
+    return {
+        "mensaje": f"{len(importados)} envio(s) importado(s) correctamente.",
+        "importados": importados,
+        "errores": errores,
+    }
+
 
 # US-07/25: Registrar envio y asignarle una prioridad
 @router.post("/", status_code=201)
