@@ -11,6 +11,8 @@ class Cliente(BaseModel):
     @field_validator("dni")
     @classmethod
     def validar_dni(cls, v):
+        if v == "***":
+            return v
         if not re.fullmatch(r"\d{7,8}", v):
             raise ValueError("El DNI debe contener entre 7 y 8 dígitos numéricos.")
         return v

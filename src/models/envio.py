@@ -31,12 +31,10 @@ class Envio(BaseModel):
         description="Dimensiones físicas del paquete (Opcional)"
     )
     consentimiento: bool = True
-    prioridadManual: bool = False
     prioridad_ml: Optional[PrioridadEnvio] = Field(
         default=None,
         description="Prioridad clasificada automáticamente por el modelo ML"
     )
-    activo: bool = True
 
     @field_validator("origen", "destino")
     @classmethod
