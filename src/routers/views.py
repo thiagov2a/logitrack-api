@@ -408,7 +408,10 @@ def vista_usuarios(request: Request):
     usuario = get_usuario_actual(request)
     if not usuario or usuario.rol != "administrador":
         return RedirectResponse(url="/", status_code=303)
-    return _render("usuarios.html", request, usuarios=mock_usuarios, usuario=usuario, rol=usuario.rol)
+    success = request.query_params.get("success")
+    error = request.query_params.get("error")
+    return _render("usuarios.html", request, usuarios=mock_usuarios, usuario=usuario,
+                   rol=usuario.rol, success=success, error=error)
 
 
 # --- US-03: Alta de usuario (vista HTML) ---
@@ -441,3 +444,68 @@ def crear_usuario_form(
 
     mock_usuarios.append(Usuario(email=email, password=password, nombre=nombre, rol=rol_nuevo, activo=True))
     return RedirectResponse(url="/usuarios/", status_code=303)
+
+
+# --- US-05: Editar usuario (vista HTML) ---
+@router.get("/usuarios/{email}/editar", response_class=HTMLResponse)
+def vista_editar_usuario(request: Request, email: str):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+    target = next((u for u in mock_usuarios if u.email == email), None)
+    if not target:
+        return RedirectResponse(url="/usuarios/", status_code=303)
+    return _render("editar_usuario.html", request, target=target, error=None, usuario=usuario, rol=usuario.rol)
+
+
+@router.post("/usuarios/{email}/editar")
+def editar_usuario_form(
+    request: Request,
+    email: str,
+    nombre: str = Form(...),
+    rol_nuevo: str = Form(...),
+):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+    target = next((u for u in mock_usuarios if u.email == email), None)
+    if not target:
+        return RedirectResponse(url="/usuarios/", status_code=303)
+    roles_validos = ["operador", "supervisor", "administrador"]
+    if len(nombre.strip()) < 2:
+        return _render("editar_usuario.html", request, target=target,
+                       error="El nombre debe tener al menos 2 caracteres.", usuario=usuario, rol=usuario.rol)
+    if rol_nuevo.lower() not in roles_validos:
+        return _render("editar_usuario.html", request, target=target,
+                       error="Rol inválido.", usuario=usuario, rol=usuario.rol)
+    target.nombre = nombre.strip()
+    target.rol = rol_nuevo.lower()
+    return RedirectResponse(url="/usuarios/?success=Usuario+actualizado+correctamente", status_code=303)
+
+
+# --- US-06: Desactivar usuario (vista HTML) ---
+@router.post("/usuarios/{email}/desactivar")
+def desactivar_usuario_form(request: Request, email: str):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+    if email == usuario.email:
+        return RedirectResponse(url="/usuarios/?error=No+puedes+desactivar+tu+propio+usuario", status_code=303)
+    target = next((u for u in mock_usuarios if u.email == email), None)
+    if not target or not target.activo:
+        return RedirectResponse(url="/usuarios/?error=Usuario+no+encontrado+o+ya+inactivo", status_code=303)
+    target.activo = False
+    return RedirectResponse(url="/usuarios/?success=Usuario+desactivado+correctamente", status_code=303)
+
+
+# --- US-06: Activar usuario (vista HTML) ---
+@router.post("/usuarios/{email}/activar")
+def activar_usuario_form(request: Request, email: str):
+    usuario = get_usuario_actual(request)
+    if not usuario or usuario.rol != "administrador":
+        return RedirectResponse(url="/", status_code=303)
+    target = next((u for u in mock_usuarios if u.email == email), None)
+    if not target or target.activo:
+        return RedirectResponse(url="/usuarios/?error=Usuario+no+encontrado+o+ya+activo", status_code=303)
+    target.activo = True
+    return RedirectResponse(url="/usuarios/?success=Usuario+activado+correctamente", status_code=303)
