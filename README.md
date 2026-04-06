@@ -6,7 +6,7 @@
 ![CI](https://github.com/thiagov2a/logitrack-api/actions/workflows/ci.yml/badge.svg)
 ![Python](https://img.shields.io/badge/Python-3.11-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.135-green)
-![Tests](https://img.shields.io/badge/Tests-81%20passed-brightgreen)
+![Tests](https://img.shields.io/badge/Tests-86%20passed-brightgreen)
 ![Linter](https://img.shields.io/badge/Linter-Flake8-yellow)
 [![Deploy](https://img.shields.io/badge/Deploy-Render-46E3B7)](https://logitrack-api-6nj5.onrender.com/)
 
@@ -110,6 +110,7 @@ uvicorn main:app --reload
 | Método | Ruta | Descripción | Rol | US |
 |---|---|---|---|---|
 | `POST` | `/api/envios/` | Registrar nuevo envío | Ambos | US-07 |
+| `POST` | `/api/envios/importar-csv` | Importar envíos desde CSV | Ambos | US-08 |
 | `GET` | `/api/envios/` | Listar envíos con filtros opcionales | Ambos | US-11/14/15 |
 | `GET` | `/api/envios/{tracking_id}` | Buscar envío por Tracking ID | Ambos | US-12 |
 | `GET` | `/api/envios/{tracking_id}/detalles` | Detalle completo con historial | Ambos | US-13 |
@@ -151,7 +152,7 @@ El modelo Random Forest predice automáticamente la prioridad del envío (ALTA/M
 pytest tests/ -v
 ```
 
-81 tests automatizados cubriendo todas las historias de usuario implementadas.
+86 tests automatizados cubriendo todas las historias de usuario implementadas.
 
 ## Documentación adicional
 
