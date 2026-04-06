@@ -89,6 +89,16 @@ def _es_estado_terminal(estado: EstadoEnvio) -> bool:
 def _esta_finalizado(envio: Envio) -> bool:
     return _estado_actual(envio) in [EstadoEnvio.ENTREGADO, EstadoEnvio.CANCELADO]
 
+def _cliente_tiene_datos(cliente) -> bool:
+    if not cliente:
+        return False
+
+    return any([
+        getattr(cliente, "dni", None),
+        getattr(cliente, "nombre", None),
+        getattr(cliente, "direccion", None),
+    ])
+
 
 # --- Datos semilla ---
 
@@ -399,11 +409,11 @@ def anonimizar_envio(
     confirmacion: ConfirmacionAnonimizacion,
     x_rol: str = Header(...)
 ):
-    """US-22: Anonimiza irreversiblemente los datos personales de un envio finalizado. Solo Supervisor."""
-    if x_rol.lower() != "supervisor":
+    """US-22: Anonimiza irreversiblemente los datos personales de un envio finalizado. Solo Administrador."""
+    if x_rol.lower() != "administrador":
         raise HTTPException(
             status_code=403,
-            detail="Acceso denegado: se requiere rol Supervisor."
+            detail="Acceso denegado: se requiere rol Administrador."
         )
 
     if not confirmacion.confirmar:
@@ -450,11 +460,11 @@ def exportar_datos_cliente(
     tipo_cliente: str = Query(..., description="remitente o destinatario"),
     x_rol: str = Header(...)
 ):
-    """US-23: Exporta en CSV los datos personales almacenados de un cliente. Solo Supervisor."""
-    if x_rol.lower() != "supervisor":
+    """US-23: Exporta en CSV los datos personales almacenados de un cliente. Solo Administrador."""
+    if x_rol.lower() != "administrador":
         raise HTTPException(
             status_code=403,
-            detail="Acceso denegado: se requiere rol Supervisor."
+            detail="Acceso denegado: se requiere rol Administrador."
         )
 
     envio = _buscar_envio(tracking_id)
@@ -468,14 +478,20 @@ def exportar_datos_cliente(
 
     cliente = envio.remitente if tipo_normalizado == "remitente" else envio.destinatario
 
-    if not cliente:
+    if not _cliente_tiene_datos(cliente):
         raise HTTPException(
             status_code=404,
             detail=f"El envio no tiene {tipo_normalizado} registrado."
-        )
+    )
 
     output = io.StringIO()
-    writer = csv.writer(output)
+    writer = csv.writer(
+        output,
+        delimiter=";",
+        quotechar='"',
+        quoting=csv.QUOTE_ALL,
+        lineterminator="\n"
+    )
 
     writer.writerow([
         "tracking_id",
@@ -492,7 +508,7 @@ def exportar_datos_cliente(
         getattr(cliente, "nombre", "") or "",
         getattr(cliente, "dni", "") or "",
         getattr(cliente, "direccion", "") or "",
-        getattr(cliente, "anonimizado", False),
+        str(getattr(cliente, "anonimizado", False)),
     ])
 
     output.seek(0)
