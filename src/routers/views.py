@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Request, Form, HTTPException, Query
+from fastapi import APIRouter, Request, Form, HTTPException, Query, UploadFile, File
 from fastapi.responses import HTMLResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from typing import Optional
 from urllib.parse import urlencode
-from src.routers.envios import mock_db_envios, _buscar_envio, _estado_actual
+from src.routers.envios import mock_db_envios, _buscar_envio, _estado_actual, importar_envios_csv
 from src.routers.auth import get_usuario_actual, mock_usuarios
 from src.models.envio import Envio
 from src.models.cliente import Cliente
@@ -76,11 +76,11 @@ def vista_listado(
 
 
 @router.get("/envios/nuevo", response_class=HTMLResponse)
-def vista_nuevo_envio(request: Request):
+def vista_nuevo_envio(request: Request, error: Optional[str] = None):
     usuario = get_usuario_actual(request)
     if not usuario:
         return RedirectResponse(url="/login", status_code=303)
-    return _render("nuevo_envio.html", request, error=None, rol=usuario.rol, usuario=usuario, datos={})
+    return _render("nuevo_envio.html", request, error=error, rol=usuario.rol, usuario=usuario, datos={})
 
 
 @router.post("/envios/nuevo")
@@ -143,6 +143,20 @@ def vista_detalle(request: Request, tracking_id: str):
         return RedirectResponse(url="/login", status_code=303)
     envio = _buscar_envio(tracking_id)
     return _render("detalle.html", request, envio=envio, rol=usuario.rol, usuario=usuario)
+
+
+# --- Importar CSV desde HTML ---
+@router.post("/envios/importar-csv")
+async def importar_csv_form(request: Request, archivo: UploadFile = File(...)):
+    usuario = get_usuario_actual(request)
+    if not usuario:
+        return RedirectResponse(url="/login", status_code=303)
+    try:
+        resultado = await importar_envios_csv(archivo)
+        total = resultado["mensaje"]
+        return RedirectResponse(url=f"/?success={total}", status_code=303)
+    except HTTPException as e:
+        return RedirectResponse(url=f"/envios/nuevo?error={e.detail}", status_code=303)
 
 
 # --- Cambio de prioridad manual desde HTML ---

@@ -105,6 +105,36 @@
                 Registrar envío →
             </button>
         </form>
+
+        <div class="border-t border-gray-100 mt-6 pt-5">
+            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">📂 Importar desde CSV</p>
+            <form action="/envios/importar-csv" method="post" enctype="multipart/form-data" class="flex items-center gap-3">
+                <input type="file" name="archivo" accept=".csv"
+                    class="text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-gray-100 file:text-gray-600 hover:file:bg-gray-200 cursor-pointer">
+                <button type="submit"
+                    class="text-xs bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg font-medium hover:bg-gray-200 transition whitespace-nowrap">
+                    Subir archivo
+                </button>
+            </form>
+            <p class="text-xs text-gray-400 mt-2">Columnas requeridas: <span class="font-medium text-gray-500">origen, destino, remitente_dni, remitente_nombre, destinatario_dni, destinatario_nombre</span>. Opcionales: peso_kg, largo_cm, ancho_cm, alto_cm.</p>
+        </div>
     </div>
 </div>
+
+{% if error %}
+<div id="toast-error"
+     class="fixed bottom-5 right-5 z-50 flex items-start gap-3 bg-red-600 text-white px-5 py-4 rounded-xl shadow-lg max-w-sm text-sm">
+    <span class="text-lg leading-none">⚠️</span>
+    <div>
+        <p class="font-semibold mb-0.5">Error al importar CSV</p>
+        <p class="text-red-100">{{ error }}</p>
+    </div>
+    <button onclick="document.getElementById('toast-error').remove()"
+            class="ml-2 text-red-200 hover:text-white text-xl leading-none">&times;</button>
+</div>
+<script>
+    setTimeout(() => { const t = document.getElementById('toast-error'); if (t) t.remove(); }, 5000);
+</script>
+{% endif %}
+
 {% endblock %}
