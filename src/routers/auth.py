@@ -23,9 +23,15 @@ mock_usuarios: list[Usuario] = [
     Usuario(email="operador2@logitrack.com", password=_hash("operador123"), nombre="Sofía Ramírez", rol="operador"),
     Usuario(email="operador3@logitrack.com", password=_hash("operador123"), nombre="Tomás Aguirre", rol="operador"),
     Usuario(email="supervisor@logitrack.com", password=_hash("supervisor123"), nombre="María López", rol="supervisor"),
-    Usuario(email="supervisor2@logitrack.com", password=_hash("supervisor123"), nombre="Nicolás Ibarra", rol="supervisor"),
-    Usuario(email="admin@logitrack.com", password=_hash("admin123"), nombre="Carlos García", rol="administrador"),
-    Usuario(email="inactivo@logitrack.com", password=_hash("inactivo123"), nombre="Pedro Inactivo", rol="operador", activo=False),
+    Usuario(
+        email="supervisor2@logitrack.com", password=_hash("supervisor123"),
+        nombre="Nicolás Ibarra", rol="supervisor"),
+    Usuario(
+        email="admin@logitrack.com", password=_hash("admin123"),
+        nombre="Carlos García", rol="administrador"),
+    Usuario(
+        email="inactivo@logitrack.com", password=_hash("inactivo123"),
+        nombre="Pedro Inactivo", rol="operador", activo=False),
 ]
 
 
