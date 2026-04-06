@@ -76,11 +76,11 @@ def vista_listado(
 
 
 @router.get("/envios/nuevo", response_class=HTMLResponse)
-def vista_nuevo_envio(request: Request, error: Optional[str] = None):
+def vista_nuevo_envio(request: Request, error: Optional[str] = None, success: Optional[str] = None):
     usuario = get_usuario_actual(request)
     if not usuario:
         return RedirectResponse(url="/login", status_code=303)
-    return _render("nuevo_envio.html", request, error=error, rol=usuario.rol, usuario=usuario, datos={})
+    return _render("nuevo_envio.html", request, error=error, success=success, rol=usuario.rol, usuario=usuario, datos={})
 
 
 @router.post("/envios/nuevo")
@@ -154,7 +154,7 @@ async def importar_csv_form(request: Request, archivo: UploadFile = File(...)):
     try:
         resultado = await importar_envios_csv(archivo)
         total = resultado["mensaje"]
-        return RedirectResponse(url=f"/?success={total}", status_code=303)
+        return RedirectResponse(url=f"/envios/nuevo?success={total}", status_code=303)
     except HTTPException as e:
         return RedirectResponse(url=f"/envios/nuevo?error={e.detail}", status_code=303)
 

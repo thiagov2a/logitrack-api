@@ -137,4 +137,20 @@
 </script>
 {% endif %}
 
+{% if success %}
+<div id="toast-success"
+     class="fixed bottom-5 right-5 z-50 flex items-start gap-3 bg-green-600 text-white px-5 py-4 rounded-xl shadow-lg max-w-sm text-sm">
+    <span class="text-lg leading-none">✅</span>
+    <div>
+        <p class="font-semibold mb-0.5">Importación exitosa</p>
+        <p class="text-green-100">{{ success }}</p>
+    </div>
+    <button onclick="document.getElementById('toast-success').remove()"
+            class="ml-2 text-green-200 hover:text-white text-xl leading-none">&times;</button>
+</div>
+<script>
+    setTimeout(() => { const t = document.getElementById('toast-success'); if (t) t.remove(); }, 5000);
+</script>
+{% endif %}
+
 {% endblock %}

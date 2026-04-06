@@ -173,7 +173,10 @@ async def importar_envios_csv(archivo: UploadFile = File(...)):
     texto = contenido.decode("utf-8")
     reader = csv.DictReader(io.StringIO(texto))
 
-    campos_requeridos = {"origen", "destino", "remitente_dni", "remitente_nombre", "destinatario_dni", "destinatario_nombre"}
+    campos_requeridos = {
+        "origen", "destino", "remitente_dni", "remitente_nombre",
+        "destinatario_dni", "destinatario_nombre",
+    }
     if not campos_requeridos.issubset(set(reader.fieldnames or [])):
         raise HTTPException(
             status_code=400,
