@@ -207,7 +207,7 @@
                         <input type="checkbox" name="confirmar" class="rounded border-red-300 text-red-600 focus:ring-red-400">
                         Confirmo que deseo cancelar este envío
                     </label>
-                    <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition">
+                    <button type="submit" class="bg-red-600 text-white px-6 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>
                         Cancelar envío
                     </button>
                 </form>
@@ -314,7 +314,7 @@
                         <input type="checkbox" name="confirmar" class="rounded border-red-300 text-red-600 focus:ring-red-400">
                         Confirmo que deseo anonimizar irreversiblemente los datos personales
                     </label>
-                    <button type="submit" class="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition">
+                    <button type="submit" class="inline-flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>
                         🛡️ Anonimizar datos personales
                     </button>
                 </form>
@@ -401,6 +401,22 @@
     if (cbPrioridad && btnPrioridad) {
         cbPrioridad.addEventListener('change', () => {
             btnPrioridad.disabled = !cbPrioridad.checked;
+        });
+    }
+
+    const cbCancelar = document.querySelector('#panel-cancelar input[name="confirmar"]');
+    const btnCancelar = document.querySelector('#panel-cancelar button[type="submit"]');
+    if (cbCancelar && btnCancelar) {
+        cbCancelar.addEventListener('change', () => {
+            btnCancelar.disabled = !cbCancelar.checked;
+        });
+    }
+
+    const cbAnonimizar = document.querySelector('#panel-anonimizar input[name="confirmar"]');
+    const btnAnonimizar = document.querySelector('#panel-anonimizar button[type="submit"]');
+    if (cbAnonimizar && btnAnonimizar) {
+        cbAnonimizar.addEventListener('change', () => {
+            btnAnonimizar.disabled = !cbAnonimizar.checked;
         });
     }
 </script>

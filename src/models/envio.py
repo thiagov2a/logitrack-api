@@ -35,6 +35,10 @@ class Envio(BaseModel):
         default=None,
         description="Prioridad clasificada automáticamente por el modelo ML"
     )
+    prioridadManual: Optional[PrioridadEnvio] = Field(
+        default=None,
+        description="Prioridad asignada manualmente por el usuario"
+    )
 
     @field_validator("origen", "destino")
     @classmethod
