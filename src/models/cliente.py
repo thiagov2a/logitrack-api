@@ -7,6 +7,7 @@ class Cliente(BaseModel):
     dni: str = Field(..., description="DNI del remitente obligatorio")
     nombre: Optional[str] = None
     anonimizado: bool = False
+    direccion: Optional[str] = None
 
     @field_validator("dni")
     @classmethod
